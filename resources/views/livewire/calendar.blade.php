@@ -5,25 +5,60 @@ use Carbon\Carbon;
 
 // Define state
 state([
-    'startsAt' => Carbon::now()->startOfMonth(),
+    'startsAt' => Carbon::now(),
+    'selectedDate' => fn() => now()->toDateString(), // Track selection by YYYY-MM-DD
+    'view' => 'month', // 'month' or 'week'
 ]);
 
-$nextMonth = function () {
-    $this->startsAt = $this->startsAt->addMonth(); 
+// Action to switch views
+$setView = fn($view) => $this->view = $view;
+
+$selectDate = function ($dateString) {
+    $this->selectedDate = $dateString;
+    $this->startsAt = Carbon::parse($dateString);
 };
 
-$prevMonth = function () {
-    $this->startsAt = $this->startsAt->subMonth();
+$nextDate = function () {
+    if ($this->view === 'month') {
+        // Move to the next month AND snap to the 1st
+        $this->startsAt = $this->startsAt->copy()->addMonth()->startOfMonth();
+    } else {
+        // Just move exactly 7 days forward
+        $this->startsAt = $this->startsAt->copy()->addWeek();
+    }
+};
+
+$prevDate = function () {
+    if ($this->view === 'month') {
+        // Move to the previous month AND snap to the 1st
+        $this->startsAt = $this->startsAt->copy()->subMonth()->startOfMonth();
+    } else {
+        // Just move exactly 7 days backward
+        $this->startsAt = $this->startsAt->copy()->subWeek();
+    }
+};
+
+$showMonthView = function () {
+    // Logic to switch to month view if needed
 };
 
 $calendarGrid = computed(function () {
     $days = [];
-    $startOfGrid = $this->startsAt->copy()->startOfWeek(Carbon::MONDAY);
-    $endOfGrid = $this->startsAt->copy()->endOfMonth()->endOfWeek(Carbon::SUNDAY);
 
-    $currentDay = $startOfGrid->copy();
+    if ($this->view === 'month') {
+        // Find the start of the month for the date currently in focus
+        $focus = $this->startsAt->copy()->startOfMonth();
+        $start = $focus->copy()->startOfWeek(Carbon::SUNDAY);
+        $end = $focus->copy()->endOfMonth()->endOfWeek(Carbon::SATURDAY);
+    } else {
+        // Week view: Just the week containing the focal date
+        $start = $this->startsAt->copy()->startOfWeek(Carbon::SUNDAY);
+        $end = $this->startsAt->copy()->endOfWeek(Carbon::SATURDAY);
+    }
 
-    while ($currentDay <= $endOfGrid) {
+    $currentDay = $start->copy();
+
+    while ($currentDay <= $end) {
         $days[] = [
             'date' => $currentDay->copy(),
             'isCurrentMonth' => $currentDay->month === $this->startsAt->month,
@@ -77,17 +112,20 @@ $getDayInfo = function ($date) {
         <h2 class="text-2xl font-bold text-[#00A2E5]">
             {{ $this->startsAt->format('F Y') }}
             <div class="space-x-2">
-                <button wire:click="prevMonth" ...>Prev</button>
-                <button wire:click="nextMonth" ...>Next</button>
+                <button wire:click="prevDate" ...>Prev</button>
+                <button wire:click="nextDate" ...>Next</button>
             </div>
         </h2>
     </div>
 
     <div class="inline-flex mb-4">
-        <button class="bg-gray-200 hover:bg-blue-200 text-gray-400 hover:text-gray-500 font-bold py-2 px-4 rounded-l">
+        <button wire:click="setView('week')"
+        class="font-bold py-2 px-4 rounded-l transition-all {{ $this->view === 'week' ? 'bg-blue-400 shadow-sm text-white' : 'bg-[#EEEEEE] text-gray-400 hover:bg-blue-200 hover:text-gray-700' }}">
             week
         </button>
-        <button class="bg-blue-400 text-gray-800 font-bold text-white py-2 px-4 rounded-r">
+        
+        <button wire:click="setView('month')"
+        class="font-bold text-white py-2 px-4 rounded-r transition-all {{ $this->view === 'month' ? 'bg-blue-400 shadow-sm text-white' : 'bg-[#EEEEEE] text-gray-400 hover:bg-blue-200 hover:text-gray-700' }}">
             maand
         </button>
     </div>
@@ -103,7 +141,14 @@ $getDayInfo = function ($date) {
     </div>
     <div class="bg-[#EEEEEE] font-bold grid grid-cols-7">
         @foreach($this->calendarGrid as $day) 
-            <div class="p-2 day">
+            @php 
+                $dateStr = $day['date']->toDateString();
+                $isSelected = $this->selectedDate === $dateStr;
+            @endphp
+            <div wire:click="selectDate('{{ $dateStr }}')" class="p-2 day cursor-pointer
+                {{ $isSelected ? 'ring-2 ring-blue-400 ring-inset' : 'hover:bg-gray-100' }}
+                {{ $day['isCurrentMonth'] ? '' : 'opacity-30' }}"
+            >
                 <div class="flex justify-between items-start">
                     @if($day['isToday'])
                         <p class="font-bold today">
