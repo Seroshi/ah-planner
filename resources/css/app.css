@@ -1,0 +1,7 @@
+/* 1. Imports first */
+@import "./calendar-styling.css";
+
+/* 2. Tailwind directives second */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
