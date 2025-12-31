@@ -16,31 +16,30 @@ class WorkdayFactory extends Factory
      */
     public function definition(): array
     {
-        // 1. Determine the type first
-        $type = $this->faker->boolean(80) 
-            ? 'work' 
-            : $this->faker->randomElement(['sick', 'holiday']);
-
-        // 2. Define logical Shift Presets
-        $shiftPresets = [
+        // Define presets here so they are available to all attributes
+        $presets = [
             ['start' => '04:30', 'end' => '11:00', 'label' => 'Opening shift'],
             ['start' => '07:15', 'end' => '10:15', 'label' => 'Early shift'],
             ['start' => '11:00', 'end' => '15:30', 'label' => 'Afternoon shift'],
             ['start' => '16:00', 'end' => '21:00', 'label' => 'Late Shift'],
         ];
 
-        // 3. Pick a random preset if it's a workday
-        $preset = ($type) 
-            ? $this->faker->randomElement($shiftPresets) 
-            : null;
+        $preset = $this->faker->randomElement($presets);
 
         return [
-            'type' => $type,
-            'label' => $type === 'shift'
-                ? 'work' 
-                : $this->faker->randomElement(['afgemeld', 'vrij']),
-            'start_time' => $preset ? $preset['start'] : null,
-            'end_time'   => $preset ? $preset['end'] : null,
+            'date' => $this->faker->date(),
+            'type' => function (array $attributes) {
+                $isPast = \Carbon\Carbon::parse($attributes['date'])->isPast();
+                if ($this->faker->boolean(85)) return 'work'; //85% chance of work
+                return $isPast ? $this->faker->randomElement(['sick', 'holiday']) : 'holiday';
+            },
+            // If type is work, use the preset. If not, null everything.
+            'start_time' => $preset['start'],
+            'end_time'   => $preset['end'],
+            'label'      => function (array $attributes) use ($preset) {
+                if ($attributes['type'] === 'work') return $preset['label'];
+                return $attributes['type'] === 'sick' ? 'Afgemeld' : 'Vrij';
+            },
         ];
     }
 }

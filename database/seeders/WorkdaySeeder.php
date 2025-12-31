@@ -16,8 +16,8 @@ class WorkdaySeeder extends Seeder
     {
         $today = now(); 
 
-        // Create 10 days in the past (so the calendar looks used)
-        for ($i = 10; $i > 0; $i--) {
+        // Create 30 days in the past (so the calendar looks used)
+        for ($i = 30; $i > 0; $i--) {
             // 70% chance to create a day, 30% chance to skip (leave it empty)
             if (rand(1, 100) <= 70) {
                 Workday::factory()->create([

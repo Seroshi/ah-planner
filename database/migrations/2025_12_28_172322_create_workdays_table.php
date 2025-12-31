@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('type');         // 'work', 'sick', 'holiday'
             $table->string('color')->nullable(); 
             $table->string('label')->nullable();
+            $table->longText('remark')->nullable();
             $table->time('start_time')->nullable();
             $table->time('end_time')->nullable();
             $table->timestamps();

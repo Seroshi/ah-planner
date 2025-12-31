@@ -4,15 +4,21 @@
     height: 27px;
     border-radius: 100%;
     color: white;
-    padding-left: 6px;
-    margin-left: -6px;
-    padding-top: 2px;
-    margin-top: -2px;
-    
 }
 
 .calendar .day{
-    font-size: 14px;
     /* border: 1px solid #d1d1d1; */
     height: 30px;
+}
+
+.calendar .dot{
+    width: 6px;
+    height: 6px;
+    border-radius: 100%;
+}
+
+.calendar .options{
+    width: 30px;
+    height: 30px;
+    border-radius: 100%;
 }
