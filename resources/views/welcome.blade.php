@@ -22,6 +22,9 @@
     </head>
     <body class="bg-[#FDFDFC] text-[#1b1b18] flex items-center min-h-screen flex-col">
         <livewire:navigation />
+        <div class="w-full px-4 sm:px-10">
+            <livewire:messages />
+        </div>
         <div class="w-full sm:w-[600px] max-w-4xl px-6 py-6">
             <livewire:calendar />
         </div>

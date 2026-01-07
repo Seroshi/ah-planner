@@ -8,6 +8,7 @@ use Carbon\Carbon;
 state([
     'startsAt' => Carbon::now(),
     'selectedDate' => fn() => now()->toDateString(), // Track selection by YYYY-MM-DD
+    'selectedId' => 1,
 ]);
 
 $dbConnection = computed(function(){
@@ -26,20 +27,23 @@ $weekNumber = computed(function () {
 // Action to switch views
 $setView = fn($view) => $this->view = $view;
 
-
+//Capture click from the calendar day
 $selectDate = function ($dateString) {
     $this->selectedDate = $dateString;
     $this->startsAt = Carbon::parse($dateString);
 };
 
+//Next month click button
 $nextDate = function () {
     $this->startsAt = $this->startsAt->copy()->addMonth();
 };
 
+//Previous month click button
 $prevDate = function () {
     $this->startsAt = $this->startsAt->copy()->subMonth();
 };
 
+//Defines the data for the calendar grid
 $calendarGrid = computed(function () {
     $days = [];
 
@@ -62,12 +66,16 @@ $calendarGrid = computed(function () {
     return $days;
 });
 
-$workdayData = computed(function () {
+$workdayData = computed(function () 
+{
     try{
-        // Fetch all workdays and turn them into a key-value array [ 'date' => [data] ]
-        return Workday::all()->keyBy(function ($item) {
-            return $item->date->format('Y-m-d');
-        })->toArray();
+        $getWorker = \App\Models\Worker::first();
+        if($getWorker){
+            // Fetch all workdays and turn them into a key-value array [ 'date' => [data] ]
+            return Workday::where('worker_id', $getWorker->id)->get()->keyBy(function ($item) {
+                return $item->date->format('Y-m-d');
+            })->toArray();
+        }else return abort(404, 'No record found in the database.');
     }
     catch (\Exception $e) { // Database is down!  
         report($e); 
@@ -85,7 +93,9 @@ $selectedWeekDays = computed(function () {
         $endOfWeek = $selectedDate->copy()->endOfWeek(Carbon::SUNDAY);
 
         // 2. Fetch only the records for this specific week from DB
-        $weeklyRecords = Workday::whereBetween('date', [
+        $getWorker = \App\Models\Worker::first();
+        $weeklyRecords = Workday::where('worker_id', $getWorker->id)
+            ->whereBetween('date', [
                 $startOfWeek->toDateString(), 
                 $endOfWeek->toDateString()
             ])
@@ -151,22 +161,22 @@ $getBreakTime = function ($hours){
     <!-- Calendar Navigation -->
     <div class="flex justify-center items-center mb-2">
         <button wire:click="prevDate" 
-            class="bg-blue-400 hover:bg-gray-300 text-white font-bold px-2 rounded-l"
+            class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-light px-2 rounded-full w-[35px] h-[35px]"
         >
-            &lt;
+            <span><i class="bi bi-chevron-left"></i></span>
         </button>
-        <h3 class="font-bold text-[#00A2E5] mx-3">
+        <h3 class="text-xl font-bold mx-3">
             {{ $this->startsAt->format('F Y') }}
         </h3>
         <button wire:click="nextDate" 
-            class="bg-blue-400 hover:bg-gray-300 text-white font-bold px-2 rounded-r"
+            class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold px-2 rounded-full w-[35px] h-[35px]"
         >
-            &#62;
+            <span><i class="bi bi-chevron-right"></i></span>
         </button>
     </div>
 
     <!-- Days of the week-->
-    <div class="text-[13px] bg-blue-200 grid grid-cols-7">
+    <div class="text-[13px] bg-ah text-white grid grid-cols-7">
         <div class="p-2"><p>ma</p></div>
         <div class="p-2"><p>di</p></div>
         <div class="p-2"><p>wo</p></div>
@@ -177,14 +187,14 @@ $getBreakTime = function ($hours){
     </div>
 
     <!-- Calendar Grid -->
-    <div class="bg-[#EEEEEE] grid grid-cols-7 mb-6">
+    <div class="gray-light grid grid-cols-7 mb-6">
         @foreach($this->calendarGrid as $day) 
             @php 
                 $dateStr = $day['date']->toDateString();
                 $isSelected = $this->selectedDate === $dateStr;
             @endphp
             <div wire:click="selectDate('{{ $dateStr }}')" class="p-2 cursor-pointer gap-1
-                {{ $isSelected && !$day['isToday'] ? 'ring-2 ring-blue-400 ring-inset' : 'hover:bg-gray-100' }}
+                {{ $isSelected && !$day['isToday'] ? 'ring-2 ring-blue-400 ring-inset' : 'hover-gray' }}
                 {{ $day['isCurrentMonth'] ? '' : 'opacity-30' }}"
             >
                 <div class="sm:text-[13px] font-bold flex sm:justify-between items-center items-start">
@@ -229,33 +239,35 @@ $getBreakTime = function ($hours){
 
     <!-- Week Information -->
     <section>
-        <h4 class="font-bold text-blue-400">My Shifts: Week {{ $this->weekNumber }}</h4>
+        <h4 class="text-xl font-bold">My Shifts: Week {{ $this->weekNumber }}</h4>
         <div class="mb-2 sm:text-[14px] ">
             @php
                 $dayData = $this->selectedWeekDays;
+                $firstDay = $dayData[0]['date'];
+                $lastDay = $dayData[6]['date'];
             @endphp
             
             @if($dayData)
-                @if($dayData[0]['date']->format('m') == $dayData[6]['date']->format('m'))
-                    {{$dayData[0]['date']->format('d')}} t/m
-                    {{$dayData[6]['date']->format('d')}}
-                    <span>{{$dayData[0]['date']->format('F')}}</span>
+                @if($firstDay->format('m') == $lastDay->format('m'))
+                    {{$firstDay->format('d')}} t/m
+                    {{$lastDay->format('d')}}
+                    <span>{{$firstDay->format('F')}}</span>
                 @else
-                    <span>{{$dayData[0]['date']->format('d')}} {{$dayData[0]['date']->format('F')}} t/m 
-                        {{$dayData[6]['date']->format('d')}} {{$dayData[6]['date']->format('F')}}</span>
+                    <span>{{$firstDay->format('d')}} {{$firstDay->format('F')}} t/m 
+                        {{$lastDay->format('d')}} {{$lastDay->format('F')}}</span>
                 @endif
             @endif
         </div>
         <div>
             @foreach($this->selectedWeekDays as $day)
                 @php 
-                    $hourDiff = $day['info']?->start_time->diffInHours($day['info']?->end_time);
+                    $hourDiff = $day['info']?->start_time?->diffInHours($day['info']?->end_time) ?? 0;
                 @endphp
                 @if($day['info']?->type)
                     <div class="sm:text-[14px] my-1 rounded
                         {{$day['isSelected'] ? 'ring-1 ring-blue-400 ring-outset' : ''}}"
                     >
-                        <div class="bg-gray-100 rounded flex justify-between items-center p-1 overflow-x-auto">
+                        <div class="gray-light rounded flex justify-between items-center p-2 overflow-x-auto">
                             <div>
                                 @if($day['info']?->type)
                                     <div>{{$day['date']->format('D d M Y')}}</div>
@@ -291,6 +303,7 @@ $getBreakTime = function ($hours){
                                         @elseif($day['info']->type === 'sick')
                                             <i class="bi bi-info-circle text-orange-500"></i>
                                             <span class="font-light">{{$day['info']?->start_time->format('H:i')}} - {{$day['info']?->end_time->format('H:i')}}</span>
+                                            <div class="text-orange-500 ml-3">Ziek</div>
                                         @endif
                                     </div>
                                 @endif
@@ -306,17 +319,14 @@ $getBreakTime = function ($hours){
                                 <i class="text-[18px] bi bi-three-dots-vertical text-blue-500 p-2"></i>
                             </div>
                         </div>
-                        
                     </div>
-                    
                 @endif
             @endforeach
         </div>
     </section>
 
-    <section class="p-2" x-show="showModal" x-cloak>
+    <section class="p-2">
         <livewire:shift-reply />
-        <button @click="showModal = false">Close</button>
     </section>
     <section>
         <livewire:notifications.success />

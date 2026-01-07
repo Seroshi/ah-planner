@@ -10,3 +10,7 @@ Route::get('/', function () {
 Route::get('/calendar', function () {
     return view('welcome'); // Or create a specific layout file
 });
+
+Route::get('/messages', function () {
+    return view('welcome'); // Or create a specific layout file
+});

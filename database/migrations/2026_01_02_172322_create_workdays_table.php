@@ -13,11 +13,14 @@ return new class extends Migration
     {
         Schema::create('workdays', function (Blueprint $table) {
             $table->id();
-            $table->date('date')->unique(); // The YYYY-MM-DD key
+            $table->foreignId('worker_id')->constrained()->onDelete('cascade');
+            $table->date('date'); // The YYYY-MM-DD key
             $table->string('type');         // 'work', 'sick', 'holiday'
-            $table->string('color')->nullable(); 
+            $table->string('topic')->nullable(); 
             $table->string('label')->nullable();
             $table->longText('remark')->nullable();
+            $table->time('remark_time')->nullable();
+            $table->boolean('read')->nullable();
             $table->time('start_time')->nullable();
             $table->time('end_time')->nullable();
             $table->timestamps();

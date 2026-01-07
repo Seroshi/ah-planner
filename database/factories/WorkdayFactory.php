@@ -33,9 +33,22 @@ class WorkdayFactory extends Factory
                 if ($this->faker->boolean(85)) return 'work'; //85% chance of work
                 return $isPast ? $this->faker->randomElement(['sick', 'holiday']) : 'holiday';
             },
-            // If type is work, use the preset. If not, null everything.
-            'start_time' => $preset['start'],
-            'end_time'   => $preset['end'],
+            // If type is work or sick, use the preset. If not, null everything.
+            'start_time' => function (array $attributes) use ($preset) {
+                return match ($attributes['type']) {
+                    'work', 'sick' => $preset['start'], // Both get the scheduled start time
+                    'holiday'      => null,             // Holidays don't have hours
+                    default        => null,
+                };
+            },
+
+            'end_time' => function (array $attributes) use ($preset) {
+                return match ($attributes['type']) {
+                    'work', 'sick' => $preset['end'],
+                    'holiday'      => null,
+                    default        => null,
+                };
+            },
             'label'      => function (array $attributes) use ($preset) {
                 if ($attributes['type'] === 'work') return $preset['label'];
                 return $attributes['type'] === 'sick' ? 'Afgemeld' : 'Vrij';
