@@ -22,6 +22,9 @@
 .bg-ah{ 
     background-color: #00A2E5; 
 }
+.hover-ah:hover{
+    background-color: #15b9ff; 
+}
 
 .t-ah-border{ 
     box-shadow: 0 -1px 0 #00A2E5; 
@@ -38,6 +41,13 @@
 .b-border { 
     box-shadow: 0 1px 0 #cccccc;
 }
+
+.btn{
+    border-radius: 9999px;
+    display: inline-block;
+    cursor: pointer;
+}
+
 
 
 /* 2. Tailwind directives second */

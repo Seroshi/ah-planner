@@ -14,6 +14,7 @@ state([
     'topicOptions' => Workday::getTopicOptions(),
 ]);
 
+
 $workday = computed(function () {
     return $this->workdayId ? Workday::find($this->workdayId) : null;
 });
@@ -97,13 +98,11 @@ $save = function () {
 ?>
 
 <div class="flex justify-center items-center z-50" style="position:fixed; width:100vw; height:100vh; top:0; left:0; background:rgba(0,0,0,0.5);"
-    x-show="showModal" x-cloak
 >
-    <form wire:submit.prevent="save" class="bg-white p-6 mr-3 rounded-md shadow-md w-[90%] max-w-lg relative" @click.away="showModal = false">
+    <form wire:submit.prevent="save" class="bg-white p-6 mr-3 rounded-md shadow-md w-[90%] max-w-lg relative">
         
         <div class="absolute top-[-15px] right-[-15px] text-xs text-white w-8 h-8 bg-gray-600 hover:bg-gray-800 rounded-full flex justify-center items-center 
             cursor-pointer shadow-md duration-200"
-            @click="showModal = false"
         >
             <i class="bi bi-x-lg"></i>
         </div>
@@ -129,6 +128,14 @@ $save = function () {
                     <span><i class="bi bi-clock-history text-blue-400"></i> {{ $display['timeDiff'] }} u.</span> 
                     <span><i class="bi bi-cup-hot text-blue-400"></i> {{ $display['breakTime'] }}</span>
                 </div>
+
+                <!-- Shift Swap Button -->
+                <a href="{{ route('shift.swap') }}"
+                    class="btn bg-ah hover-ah text-white py-2 px-10 mt-4 group"\
+                >
+                    <span class="mr-1">Shift ruilen</span>
+                    <i class="bi bi-arrow-repeat inline-block transition-transform duration-500 group-hover:rotate-180"></i>
+                </a>
             </div>
             @endif
 

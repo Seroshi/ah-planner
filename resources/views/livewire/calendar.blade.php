@@ -1,6 +1,6 @@
 <?php
 
-use function Livewire\Volt\{state, computed};
+use function Livewire\Volt\{state, mount, computed};
 use App\Models\Workday;
 use Carbon\Carbon;
 
@@ -9,7 +9,12 @@ state([
     'startsAt' => Carbon::now(),
     'selectedDate' => fn() => now()->toDateString(), // Track selection by YYYY-MM-DD
     'selectedId' => 1,
+    'activeModal' => 'details',
 ]);
+
+$showDetails = fn() => $this->activeModal = 'details';
+$showShiftSwap = fn() => $this->activeModal = 'shiftSwap';
+$close = fn() => $this->activeModal = null;
 
 $dbConnection = computed(function(){
     try {
@@ -326,7 +331,11 @@ $getBreakTime = function ($hours){
     </section>
 
     <section class="p-2">
-        <livewire:shift-reply />
+        @if($activeModal === 'details')
+            <livewire:shift-reply />
+        @elseif($activeModal === 'shiftSwap')
+            <livewire:shift-swap />
+        @endif
     </section>
     <section>
         <livewire:notifications.success />
