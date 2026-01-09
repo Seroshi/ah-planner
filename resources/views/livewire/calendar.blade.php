@@ -346,11 +346,7 @@ $getDayInfo = function ($date) {
     </section>
 
     <section class="p-2">
-        @if($activeModal === 'details')
-            <livewire:shift-reply />
-        @elseif($activeModal === 'shiftSwap')
-            <livewire:shift-swap />
-        @endif
+        <livewire:shift-reply />
     </section>
     
 </div>

@@ -15,7 +15,6 @@ state([
     'topicOptions' => Workday::getTopicOptions(),
 ]);
 
-
 $workday = computed(function () {
     return $this->workdayId ? Workday::find($this->workdayId) : null;
 });
@@ -86,11 +85,13 @@ $save = function () {
 ?>
 
 <div class="flex justify-center items-center z-50" style="position:fixed; width:100vw; height:100vh; top:0; left:0; background:rgba(0,0,0,0.5);"
+    x-show="showModal" x-cloak
 >
     <div class="bg-white p-6 mr-3 rounded-md shadow-md w-[90%] max-w-lg relative" @click.away="showModal = false">
         
         <div class="absolute top-[-15px] right-[-15px] text-xs text-white w-8 h-8 bg-gray-600 hover:bg-gray-800 rounded-full flex justify-center items-center 
             cursor-pointer shadow-md duration-200"
+            @click="showModal = false"
         >
             <i class="bi bi-x-lg"></i>
         </div>
@@ -144,6 +145,15 @@ $save = function () {
                         <span>{{ $display['breakTime'] }}</span>
                     </div>
                 </div>
+
+                <!-- Only show if 7 days in the future -->
+                @if($display['swapAllowedInTime'] && $this->workday->type != 'holiday')
+                    <a href="{{route('shift.swap', $this->workdayId)}}" class="btn bg-ah bg-ah-hover text-white py-2 px-10 group mt-4 mb-4">
+                        <span class="mr-1">Shift ruilen</span>
+                        <span><i class="bi bi-arrow-repeat inline-block transition-transform duration-500 group-hover:rotate-180"></i></span>
+                    </a>
+                @endif
+        
             </div>
             @endif
 
