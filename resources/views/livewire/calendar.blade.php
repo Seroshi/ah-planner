@@ -9,7 +9,12 @@ state([
     'startsAt' => Carbon::now(),
     'selectedDate' => fn() => now()->toDateString(), // Track selection by YYYY-MM-DD
     'selectedId' => 1,
+    'workday' => null,
 ]);
+
+mount(function () {
+    // return dd($this->getTest);
+});
 
 $dbConnection = computed(function(){
     try {
