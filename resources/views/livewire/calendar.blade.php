@@ -330,6 +330,26 @@ $getDayInfo = function ($date) {
                                             </span>
                                         </div>
 
+                                        <!-- Icons 2/4 Total hours -->
+                                        <div class="flex-none w-[80px]">
+                                            <i class="bi bi-clock-history text-blue-400"></i>
+                                            <span class="font-light">
+                                                {{ $hourDiff }} u.
+                                            </span>
+                                        </div>
+
+                                        <!-- Icons 3/4 Break -->
+                                        <div class="flex-none w-[110px]">
+                                            <i class="bi bi-cup-hot text-blue-400"></i>
+                                            <span class="font-light">{{ $getBreakTime }}</span>
+                                        </div>
+
+                                        <!-- Icons 4/4 Label -->
+                                        <div class="flex flew-no-wrap gap-1">
+                                            <i class="bi bi-tags text-blue-400"></i>
+                                            <span class="font-light">vullen</span>
+                                        </div>
+
                                     @elseif($day['info']->type === 'holiday')
                                         <!-- Icons 1/4 Holiday type -->
                                         <div class="flex-none w-[110px]">
@@ -346,25 +366,6 @@ $getDayInfo = function ($date) {
                                         </div>
                                     @endif
 
-                                    <!-- Icons 2/4 Total hours -->
-                                    <div class="flex-none w-[80px]">
-                                        <i class="bi bi-clock-history text-blue-400"></i>
-                                        <span class="font-light">
-                                            {{ $hourDiff }} u.
-                                        </span>
-                                    </div>
-
-                                    <!-- Icons 3/4 Break -->
-                                    <div class="flex-none w-[110px]">
-                                        <i class="bi bi-cup-hot text-blue-400"></i>
-                                        <span class="font-light">{{ $getBreakTime }}</span>
-                                    </div>
-
-                                    <!-- Icons 4/4 Label -->
-                                    <div class="flex flew-no-wrap gap-1">
-                                        <i class="bi bi-tags text-blue-400"></i>
-                                        <span class="font-light">vullen</span>
-                                    </div>
                                 </div>
                             @endif
                         </div>
