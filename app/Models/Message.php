@@ -11,14 +11,25 @@ class Message extends Model
 
     protected $guarded = [];
 
+    protected $casts = [
+        'date' => 'date',
+    ];
+
     public function workday()
     {
+        // To recognize the workday_id column 
         return $this->belongsTo(Workday::class);
+    }
+
+    public function shiftSwap()
+    {
+        // Making it linked with one Shiftswap record
+        return $this->hasOne(ShiftSwap::class);
     }
 
     public function worker()
     {
-        // Look at 'worker_id' field that match with ID from Worker model 
+        // To recognize the worker_id column 
         return $this->belongsTo(Worker::class);
     }
 

@@ -1,18 +1,21 @@
 /* 1. Imports first */
-@import "./main.css";
 @import "./animation.css";
 @import "./calendar-styling.css";
+
+a{
+    cursor: pointer;
+}
 
 .color-ah { 
     color: #00A2E5; 
 }
 
 .hover-gray:hover{
-    background-color: #f7f7f7;
+    background-color: #ffffff;
 }
 
 .gray-light{
-    background-color: #f0f0f0;
+    background-color: #f4f4f4;
 }
 
 .gray-base{
@@ -22,6 +25,10 @@
 .bg-ah{ 
     background-color: #00A2E5; 
 }
+.bg-ah-hover:hover{ 
+    background-color: #00b1fd; 
+}
+
 
 .t-ah-border{ 
     box-shadow: 0 -1px 0 #00A2E5; 
@@ -39,6 +46,16 @@
     box-shadow: 0 1px 0 #cccccc;
 }
 
+.btn{
+    display: inline-block;
+    border-radius: 9999px;
+    cursor: pointer;
+}
+
+.stroke-1{
+    -webkit-text-stroke: 1px black;
+    text-stroke: 1px black;
+}
 
 /* 2. Tailwind directives second */
 @tailwind base;

@@ -1,6 +1,6 @@
 <?php
 
-use function Livewire\Volt\{state, computed};
+use function Livewire\Volt\{state, mount, computed};
 use App\Models\Workday;
 use Carbon\Carbon;
 
@@ -9,7 +9,12 @@ state([
     'startsAt' => Carbon::now(),
     'selectedDate' => fn() => now()->toDateString(), // Track selection by YYYY-MM-DD
     'selectedId' => 1,
+    'workday' => null,
 ]);
+
+mount(function () {
+    // return dd($this->getTest);
+});
 
 $dbConnection = computed(function(){
     try {
@@ -31,6 +36,31 @@ $setView = fn($view) => $this->view = $view;
 $selectDate = function ($dateString) {
     $this->selectedDate = $dateString;
     $this->startsAt = Carbon::parse($dateString);
+
+    //Grab the neccessary from clicked day and open in modal 
+    if( isset($this->workdayData[$dateString]) ){
+
+        $dataResult = $this->workdayData[$dateString];
+        $hourDiff = round(Carbon::parse($dataResult['start_time'])->diffInHours(Carbon::parse($dataResult['end_time'])));
+        $breakTime = Workday::getBreakTime($hourDiff);
+        $this->dispatch('set-day-data', 
+            shiftID: $dataResult['id'],
+            timeDiff: $hourDiff,
+            breakTime: $breakTime,
+        );
+
+    }else{
+
+        //Reset the modal to show no old data
+        $this->dispatch('set-day-data', 
+            shiftID: $this->selectedId,
+            timeDiff: null,
+            breakTime: null,
+        );
+    }
+
+    
+
 };
 
 //Next month click button
@@ -69,13 +99,11 @@ $calendarGrid = computed(function () {
 $workdayData = computed(function () 
 {
     try{
-        $getWorker = \App\Models\Worker::first();
-        if($getWorker){
-            // Fetch all workdays and turn them into a key-value array [ 'date' => [data] ]
-            return Workday::where('worker_id', $getWorker->id)->get()->keyBy(function ($item) {
-                return $item->date->format('Y-m-d');
-            })->toArray();
-        }else return abort(404, 'No record found in the database.');
+        $worker_id = 1;
+        // Fetch all workdays and turn them into a key-value array [ 'date' => [data] ]
+        return Workday::where('worker_id', $worker_id)->get()->keyBy(function ($item) {
+            return $item->date->format('Y-m-d');
+        })->toArray();
     }
     catch (\Exception $e) { // Database is down!  
         report($e); 
@@ -128,21 +156,14 @@ $selectedWeekDays = computed(function () {
 
 // Helper function to check the date string
 $getDayInfo = function ($date) {
-    return $this->workdayData[$date->toDateString()] ?? null;
+    $data = $this->workdayData[$date->toDateString()] ?? null;
+    $this->workday = $data;
+    return $data;
 };
-
-$getBreakTime = function ($hours){
-    $breakTime = '0 min';
-    if($hours >= 4 && $hours < 6) $breakTime = "15 min";
-    elseif($hours >= 6 && $hours <= 7) $breakTime = "30 min";
-    elseif($hours > 7) $breakTime = "1 u.";
-
-    return $breakTime;
-}
 
 ?>
 
-<div class="calendar w-full mb-6" 
+<div wire:poll.10s class="calendar sm:w-[550px] max-w-3xl mx-auto" 
     x-data="{ showModal: false }" @close-modal.window="showModal = false"
 >
 
@@ -165,7 +186,7 @@ $getBreakTime = function ($hours){
         >
             <span><i class="bi bi-chevron-left"></i></span>
         </button>
-        <h3 class="text-xl font-bold mx-3">
+        <h3 class="text-lg font-bold mx-3">
             {{ $this->startsAt->format('F Y') }}
         </h3>
         <button wire:click="nextDate" 
@@ -187,13 +208,14 @@ $getBreakTime = function ($hours){
     </div>
 
     <!-- Calendar Grid -->
-    <div class="gray-light grid grid-cols-7 mb-6">
+    <div class="gray-light grid grid-cols-7 mb-6 border">
         @foreach($this->calendarGrid as $day) 
             @php 
                 $dateStr = $day['date']->toDateString();
                 $isSelected = $this->selectedDate === $dateStr;
+                $info = $this->getDayInfo($day['date']); 
             @endphp
-            <div wire:click="selectDate('{{ $dateStr }}')" class="p-2 cursor-pointer gap-1
+            <div wire:click="selectDate('{{ $dateStr }}'), showModal = true" class="p-2 cursor-pointer gap-1
                 {{ $isSelected && !$day['isToday'] ? 'ring-2 ring-blue-400 ring-inset' : 'hover-gray' }}
                 {{ $day['isCurrentMonth'] ? '' : 'opacity-30' }}"
             >
@@ -203,10 +225,6 @@ $getBreakTime = function ($hours){
                     @else
                         <p class="font-bold ">{{ $day['date']->day }}</p>
                     @endif
-
-                    @php 
-                        $info = $this->getDayInfo($day['date']); 
-                    @endphp
 
                     @if($info)
                         @if($info['type'] === 'work')
@@ -239,7 +257,7 @@ $getBreakTime = function ($hours){
 
     <!-- Week Information -->
     <section>
-        <h4 class="text-xl font-bold">My Shifts: Week {{ $this->weekNumber }}</h4>
+        <h4 class="text-lg font-bold">My Shifts: Week {{ $this->weekNumber }}</h4>
         <div class="mb-2 sm:text-[14px] ">
             @php
                 $dayData = $this->selectedWeekDays;
@@ -262,9 +280,10 @@ $getBreakTime = function ($hours){
             @foreach($this->selectedWeekDays as $day)
                 @php 
                     $hourDiff = $day['info']?->start_time?->diffInHours($day['info']?->end_time) ?? 0;
+                    $getBreakTime = \App\Models\Workday::getBreakTime($hourDiff );
                 @endphp
                 @if($day['info']?->type)
-                    <div class="sm:text-[14px] my-1 rounded
+                    <div class="sm:text-[14px] my-1 rounded border
                         {{$day['isSelected'] ? 'ring-1 ring-blue-400 ring-outset' : ''}}"
                     >
                         <div class="gray-light rounded flex justify-between items-center p-2 overflow-x-auto">
@@ -291,7 +310,7 @@ $getBreakTime = function ($hours){
                                             </div>
                                             <div class="flex-none" style="width: 100px;">
                                                 <i class="bi bi-cup-hot text-blue-400"></i>
-                                                <span class="font-light">{{$this->getBreakTime($hourDiff)}}</span>
+                                                <span class="font-light">{{ $getBreakTime }}</span>
                                             </div>
                                             <div>
                                                 <i class="bi bi-tags text-blue-400"></i>
@@ -312,7 +331,7 @@ $getBreakTime = function ($hours){
                                 @click="$dispatch('set-day-data', { 
                                     shiftID: '{{ $day['info']->id }}',
                                     'timeDiff': '{{ $hourDiff }}',
-                                    'breakTime': '{{ $this->getBreakTime($hourDiff) }}'
+                                    'breakTime': '{{ $getBreakTime }}'
                                 }),
                                 showModal = true"
                             >
@@ -328,7 +347,5 @@ $getBreakTime = function ($hours){
     <section class="p-2">
         <livewire:shift-reply />
     </section>
-    <section>
-        <livewire:notifications.success />
-    </section>
+    
 </div>

@@ -13,11 +13,11 @@ return new class extends Migration
     {
         Schema::create('shift_swaps', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('message_id')->constrained()->onDelete('cascade');
+            $table->foreignId('message_id')->nullable()->constrained('messages')->onDelete('set null');
             $table->integer('requester_id');
             $table->integer('receiver_id');
             $table->integer('workday_id_1');
-            $table->integer('workday_id_2');
+            $table->integer('workday_id_2')->nullable();
             $table->boolean('status');
             $table->timestamps();
         });

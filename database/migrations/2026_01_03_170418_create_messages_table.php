@@ -14,12 +14,15 @@ return new class extends Migration
         Schema::create('messages', function (Blueprint $table) {
             $table->id();
             $table->foreignId('worker_id')->constrained()->onDelete('cascade');
-            $table->foreignId('workday_id')->constrained()->onDelete('cascade');
+            $table->integer('receiver_id')->nullable();
+            $table->foreignId('workday_id')->nullable()->constrained();
+            $table->date('date')->nullable();;
             $table->string('topic');
             $table->longText('remark');
+            $table->longText('replier')->nullable();
             $table->longText('response')->nullable();
-            $table->integer('status');
-            $table->boolean('read');
+            $table->integer('status')->nullable();
+            $table->boolean('read')->nullable();
             $table->timestamps();
         });
     }
