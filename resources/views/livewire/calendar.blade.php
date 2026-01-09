@@ -163,7 +163,7 @@ $getDayInfo = function ($date) {
 
 ?>
 
-<div wire:poll.10s class="calendar sm:w-[550px] max-w-3xl mx-auto" 
+<div wire:poll.10s class="calendar sm:max-w-[650px] mx-auto" 
     x-data="{ showModal: false }" @close-modal.window="showModal = false"
 >
 
@@ -215,7 +215,7 @@ $getDayInfo = function ($date) {
                 $isSelected = $this->selectedDate === $dateStr;
                 $info = $this->getDayInfo($day['date']); 
             @endphp
-            <div wire:click="selectDate('{{ $dateStr }}'), showModal = true" class="p-2 cursor-pointer gap-1
+            <div wire:click="selectDate('{{ $dateStr }}'), showModal = true" class="p-2 cursor-pointer gap-1 h-[50px]
                 {{ $isSelected && !$day['isToday'] ? 'ring-2 ring-blue-400 ring-inset' : 'hover-gray' }}
                 {{ $day['isCurrentMonth'] ? '' : 'opacity-30' }}"
             >
@@ -257,24 +257,27 @@ $getDayInfo = function ($date) {
 
     <!-- Week Information -->
     <section>
-        <h4 class="text-lg font-bold">My Shifts: Week {{ $this->weekNumber }}</h4>
-        <div class="mb-2 sm:text-[14px] ">
-            @php
-                $dayData = $this->selectedWeekDays;
-                $firstDay = $dayData[0]['date'];
-                $lastDay = $dayData[6]['date'];
-            @endphp
-            
-            @if($dayData)
-                @if($firstDay->format('m') == $lastDay->format('m'))
-                    {{$firstDay->format('d')}} t/m
-                    {{$lastDay->format('d')}}
-                    <span>{{$firstDay->format('F')}}</span>
-                @else
-                    <span>{{$firstDay->format('d')}} {{$firstDay->format('F')}} t/m 
-                        {{$lastDay->format('d')}} {{$lastDay->format('F')}}</span>
+
+        <div class="text-center">
+            <h4 class="text-lg font-bold">Mijn shiften in week {{ $this->weekNumber }}</h4>
+            <div class="mb-2 sm:text-[14px] ">
+                @php
+                    $dayData = $this->selectedWeekDays;
+                    $firstDay = $dayData[0]['date'];
+                    $lastDay = $dayData[6]['date'];
+                @endphp
+                
+                @if($dayData)
+                    @if($firstDay->format('m') == $lastDay->format('m'))
+                        {{ $firstDay->format('d') }} t/m
+                        {{ $lastDay->format('d') }}
+                        <span>{{$firstDay->format('F')}}</span>
+                    @else
+                        <span>{{ $firstDay->format('d') }} {{ $firstDay->format('F') }} t/m 
+                            {{ $lastDay->format('d') }} {{ $lastDay->format('F') }}</span>
+                    @endif
                 @endif
-            @endif
+            </div>
         </div>
         <div>
             @foreach($this->selectedWeekDays as $day)
@@ -286,13 +289,17 @@ $getDayInfo = function ($date) {
                     <div class="sm:text-[14px] my-1 rounded border
                         {{$day['isSelected'] ? 'ring-1 ring-blue-400 ring-outset' : ''}}"
                     >
-                        <div class="gray-light rounded flex justify-between items-center p-2 overflow-x-auto">
-                            <div>
+                        <div class="gray-light rounded flex justify-between items-center h-[65px]">
+                            <div class="grow overflow-x-hidden px-3">
                                 @if($day['info']?->type)
-                                    <div>{{$day['date']->format('D d M Y')}}</div>
+
+                                    <!-- Shift day -->
+                                    <div class="whitespace-nowrap overflow-x-hidden">{{$day['date']->format('D d M Y')}}</div>
+                                    
+                                    <!-- Shift details -->
                                     <div class="flex gap-1">
                                         @if($day['info']->type === 'work')
-                                            <div class="flex-none" style="width: 130px;">
+                                            <div class="flex-none" style="width: 110px;">
                                                 @if($day['date']->isPast() && !$day['isToday'])
                                                     <i class="bi bi-check-circle text-blue-400"></i>
                                                 @else
@@ -302,17 +309,17 @@ $getDayInfo = function ($date) {
                                                     {{$day['info']?->start_time->format('H:i')}} - {{$day['info']?->end_time->format('H:i')}}
                                                 </span>
                                             </div>
-                                            <div class="flex-none" style="width: 90px;">
+                                            <div class="flex-none" style="width: 70px;">
                                                 <i class="bi bi-clock-history text-blue-400"></i>
                                                 <span class="font-light">
                                                     {{ $hourDiff }} u.
                                                 </span>
                                             </div>
-                                            <div class="flex-none" style="width: 100px;">
+                                            <div class="flex-none" style="width: 90px;">
                                                 <i class="bi bi-cup-hot text-blue-400"></i>
                                                 <span class="font-light">{{ $getBreakTime }}</span>
                                             </div>
-                                            <div>
+                                            <div class="flex flew-no-wrap gap-1">
                                                 <i class="bi bi-tags text-blue-400"></i>
                                                 <span class="font-light">vullen</span>
                                             </div>
@@ -327,16 +334,21 @@ $getDayInfo = function ($date) {
                                     </div>
                                 @endif
                             </div>
-                            <div class="cursor-pointer options hover:bg-white hover:shadow-md flex justify-center items-center"
-                                @click="$dispatch('set-day-data', { 
-                                    shiftID: '{{ $day['info']->id }}',
-                                    'timeDiff': '{{ $hourDiff }}',
-                                    'breakTime': '{{ $getBreakTime }}'
-                                }),
-                                showModal = true"
-                            >
-                                <i class="text-[18px] bi bi-three-dots-vertical text-blue-500 p-2"></i>
+
+                            <!-- Dots button with dispatch -->
+                            <div class="flex px-1 h-full items-center border-l cursor-pointer hover:bg-white">
+                                <div class="flex justify-center items-center"
+                                    @click="$dispatch('set-day-data', { 
+                                        shiftID: '{{ $day['info']->id }}',
+                                        'timeDiff': '{{ $hourDiff }}',
+                                        'breakTime': '{{ $getBreakTime }}'
+                                    }),
+                                    showModal = true"
+                                >
+                                    <i class="text-[18px] bi bi-three-dots-vertical text-blue-500 p-2"></i>
+                                </div>
                             </div>
+
                         </div>
                     </div>
                 @endif
