@@ -7,13 +7,15 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
-// Route::get('/calendar', function () {
+Volt::route('/calendar', 'calendar')
+    ->name('calendar');
+
+Volt::route('/messages', 'messages')
+    ->name('messages');
+
+Volt::route('/shift-ruil/{workday}', 'shift-swap')
+    ->name('shift.swap');
+
+// Route::get('/messages', function () {
 //     return view('welcome'); // Or create a specific layout file
 // });
-
-Volt::route('/calendar', 'calendar')->name('calendar');
-Volt::route('/shift-ruil', 'calendar')->name('shift.swap');
-
-Route::get('/messages', function () {
-    return view('welcome'); // Or create a specific layout file
-});

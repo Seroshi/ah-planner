@@ -48,7 +48,7 @@ $categorizePeople = computed( function(){
 
 ?>
 
-<div class="mb-10 flex justify-center" x-data="{ showMessageModal: false }">
+<div class="mb-2 mx-auto" x-data="{ showMessageModal: false }">
 
     @if($this->messages()->count() > 0)
 
@@ -63,7 +63,7 @@ $categorizePeople = computed( function(){
             <!-- Message item -->
             @foreach($this->messages() as $message)
                 <div class="flex bg-white border-b last:border-b-0 hover:bg-gray-50 transition"
-                    @click="$dispatch('set-modal-messsage-data', 
+                    @click="$dispatch('set-modal-message-data', 
                     { 
                         messageId: '{{ $message->id }}',
                         topic: '{{ $this->options[$message->topic]['label'] }}',
@@ -89,7 +89,8 @@ $categorizePeople = computed( function(){
 
                     <!-- Message content -->
                     <div class="w-[65%] p-4 text-sm line-clamp-2">
-                        [{{$this->options[$message->topic]['label']}}] {{$message->remark}}
+                        <span>[{{$this->options[$message->topic]['label']}}]</span>
+                        <span>{{$message->remark}}</span>
                     </div>
 
                     <!-- Date display -->

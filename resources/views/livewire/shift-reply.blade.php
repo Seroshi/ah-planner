@@ -9,6 +9,7 @@ use Carbon\Carbon;
 state([
     'workdayId' => null, // Store ONLY the ID in state
     'display' => [],
+    'condition' => [],
     'topic' => '',
     'remark' => '',
     'topicOptions' => Workday::getTopicOptions(),
@@ -37,7 +38,6 @@ on(['set-day-data' => function ($shiftID, $timeDiff, $breakTime) {
         'sick' => 'shift (ziek gemeld)',
     ];
 
-
     //Values received from the 'calendar' volt component 
     $this->display = [
         'date'      => $workday->date->format('l d M Y'),
@@ -46,6 +46,11 @@ on(['set-day-data' => function ($shiftID, $timeDiff, $breakTime) {
         'endTime'   => $workday->end_time?->format('H:i') ?? '',
         'timeDiff'  => $timeDiff,
         'breakTime' => $breakTime,
+        'swapAllowedInTime' => Workday::swapAllowedInTime($workday->date),
+    ];
+
+    $this->condition = [
+        'isHoliday' => ($workday->type === 'holiday') ? true : false,
     ];
 
     //Form fields from this component (found below)
@@ -56,50 +61,33 @@ on(['set-day-data' => function ($shiftID, $timeDiff, $breakTime) {
 $save = function () {
     $this->validate();
 
-    // Update existing remark in database if found
-    // $this->workday?->update([
-    //     'topic' => $this->topic,
-    //     'remark' => $this->remark,
-    // ]);
-
-    // $data = collect([
-    //     'workday_id' => $this->workday->id,
-    //     'topic' => $this->topic,
-    //     'remark' => $this->remark,
-    //     'status' => 0,
-    //     'read' => 0,
-    // ]);
-
     // return dd($data);
     $getWorker = \App\Models\Worker::firstOrFail();
 
     $message = Message::create([
         'worker_id' => $getWorker?->id,
-        'workday_id' => $this->workday->id,
+        'workday_id' => $this->workday->id ?? null,
+        'date' => null,
         'topic' => $this->topic,
         'remark' => $this->remark,
         'status' => 0,
         'read' => 0,
     ]);
 
-    //Refresh messages volt component 
-    $this->dispatch('refresh-data'); 
-
-    // Dispatch a browser event
-    $this->dispatch('close-modal');
-
     // Clear the form
     $this->reset(['topic', 'remark']);
 
     // Dispatch a success notification
-    $this->dispatch('success', message: 'Opmerking verstuurd!');
+    session()->flash('notification', 'Opmerking verstuurd!');
+
+    return $this->redirectRoute('home', navigate: true);
 };
 
 ?>
 
 <div class="flex justify-center items-center z-50" style="position:fixed; width:100vw; height:100vh; top:0; left:0; background:rgba(0,0,0,0.5);"
 >
-    <form wire:submit.prevent="save" class="bg-white p-6 mr-3 rounded-md shadow-md w-[90%] max-w-lg relative">
+    <div class="bg-white p-6 mr-3 rounded-md shadow-md w-[90%] max-w-lg relative" @click.away="showModal = false">
         
         <div class="absolute top-[-15px] right-[-15px] text-xs text-white w-8 h-8 bg-gray-600 hover:bg-gray-800 rounded-full flex justify-center items-center 
             cursor-pointer shadow-md duration-200"
@@ -110,32 +98,52 @@ $save = function () {
     
             @if($this->workday)
             <div>
+                <!-- Sub info -->
                 <div class="text-gray-500">
-                    <div><span><i class="bi bi-building text-gray-400""></i></span> AH: 1645</div>
-                    <div><span><i class="bi bi-check-circle text-gray-400"></i></span> Geregistreerd door: Jeroen Blankeveld</div>
+                    <div><i class="bi bi-building text-gray-400""></i> AH: 1645</div>
+                    <div><i class="bi bi-check-circle text-gray-400"></i> Geregistreerd door: Jeroen Blankeveld</div>
                 </div>
-                
-                <h3 class="text-xl font-bold mt-4">Jouw {{ $display['type'] }}</h3>
-                <div class="flex gap-10">
+
+                <h3 class="text-xl font-bold b-ah-border pb-1 mb-3 my-4">Mijn shift</h3>
+
+                <!-- Workday -->
+                <div>
+                    <i class="bi bi-calendar4-week text-blue-400 mr-1 mb-2"></i>
                     <span>{{ $display['date'] }}</span>
                 </div>
 
-                <div class="flex gap-6">
-                    <span><i class="bi bi-clock text-blue-400"></i> {{ $display['startTime'] }} - {{ $display['endTime'] }}</span>
-                    <span><i class="bi bi-tags text-blue-400"></i> Vullen</span>
-                </div>
-                <div class="flex gap-6">
-                    <span><i class="bi bi-clock-history text-blue-400"></i> {{ $display['timeDiff'] }} u.</span> 
-                    <span><i class="bi bi-cup-hot text-blue-400"></i> {{ $display['breakTime'] }}</span>
+                <div class="flex gap-x-1 flex-wrap ">
+                    <!-- Shift time -->
+                    <div class="w-[140px]">
+                        @if($condition['isHoliday'])
+                            <i class="bi bi-brightness-alt-high-fill text-blue-400 mr-1"></i>
+                            <span>Vrij</span>
+                        @else
+                            <i class="bi bi-clock text-blue-400 mr-1"></i>
+                            <span>{{ $display['startTime'] }}</span>
+                        @endif
+                    </div>
+
+                    <!-- Label -->
+                    <div>
+                        <i class="bi bi-tags text-blue-400 mr-1"></i>
+                        <span>Vullen</span>
+                    </div>
                 </div>
 
-                <!-- Shift Swap Button -->
-                <a href="{{ route('shift.swap') }}"
-                    class="btn bg-ah hover-ah text-white py-2 px-10 mt-4 group"\
-                >
-                    <span class="mr-1">Shift ruilen</span>
-                    <i class="bi bi-arrow-repeat inline-block transition-transform duration-500 group-hover:rotate-180"></i>
-                </a>
+                <div class="flex gap-x-1 flex-wrap">
+                    <!-- Total hours -->
+                    <div class="w-[140px]">
+                        <i class="bi bi-clock-history text-blue-400 mr-1"></i>
+                        <span>{{ $display['timeDiff'] }} uren</span>
+                    </div>
+
+                    <!-- Breaktime -->
+                    <div>
+                        <i class="bi bi-cup-hot text-blue-400 mr-1"></i>
+                        <span>{{ $display['breakTime'] }}</span>
+                    </div>
+                </div>
             </div>
             @endif
 
@@ -145,33 +153,38 @@ $save = function () {
                 </div>
             @endif
 
-            <div>
-                <label for="topic" class="block text-base font-bold mb-1">Onderwerp *</label>
-                <select wire:model="topic" @disabled($this->topic) class="bg-gray-100 rounded-md p-2">
-                    <option value="" disabled>Kies een onderwerp</option>
-                    @foreach($this->topicOptions as $index => $option)
-                    <option value="{{$index}}">{{$option['value']}}</option>
-                    @endforeach
-                </select>
-                <div>@error('topic') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror</div>
-            </div>
-
-            <div>
-                <label for="remark" class="text-base font-bold">Bericht *</label>
-                <textarea wire:model="remark" @readonly($this->remark) class="w-full bg-gray-100 rounded-md focus:border-blue focus:outline-none focus:ring-1 mt-2 p-2"></textarea>
-                @error('remark') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
-            </div>
-
-            @if(!$this->remark)
-                <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700">
-                    Stuur opmerking
-                </button>
-            @else
-                <div class="w-full flex justify-center bg-gray-200 text-gray-800 py-2 rounded-md">
-                    Jouw reactie is in behandeling <span><i class="bi bi-clock-history ml-2"></i></span>
+            <form wire:submit.prevent="save">
+                <div>
+                    <label for="topic" class="block text-base font-bold mb-1">Onderwerp *</label>
+                    <select wire:model="topic" @disabled($this->topic) class="bg-gray-100 rounded-md p-2">
+                        <option value="" disabled>Kies een onderwerp</option>
+                        @foreach($this->topicOptions as $index => $option)
+                            <!-- Skip shift ruil -->
+                            @if($index != 4)
+                                <option value="{{$index}}">{{$option['value']}}</option>
+                            @endif
+                        @endforeach
+                    </select>
+                    <div>@error('topic') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror</div>
                 </div>
-            @endif
+
+                <div class="mt-2">
+                    <label for="remark" class="text-base font-bold">Bericht *</label>
+                    <textarea wire:model="remark" @readonly($this->remark) class="w-full bg-gray-100 rounded-md focus:border-blue focus:outline-none focus:ring-1 mt-2 p-2"></textarea>
+                    @error('remark') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                </div>
+
+                @if(!$this->remark)
+                    <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700">
+                        Stuur opmerking
+                    </button>
+                @else
+                    <div class="w-full flex justify-center bg-gray-200 text-gray-800 py-2 rounded-md">
+                        Jouw reactie is in behandeling <span><i class="bi bi-clock-history ml-2"></i></span>
+                    </div>
+                @endif
+            </form>
         </div>
-    </form>
+    <div>
 
 </div>

@@ -19,25 +19,30 @@ $message = computed(function () {
     return $this->message ? Message::find($this->message) : null;
 });
 
-on(['set-modal-messsage-data' => function($messageId, $topic){
+// Received from messages dispatch function
+on(['set-modal-message-data' => function($messageId, $topic){
     $msg = Message::findOrFail($messageId);
     $this->message = $msg;
 
-    if($msg->workday->type != 'holiday'){
-        $worktime = $msg->workday->start_time->format('H:i').' - '.$msg->workday->end_time->format('H:i');
+    if($msg->workday?->type != 'holiday'){
+        $worktime = $msg->workday?->start_time->format('H:i').' - '.$msg->workday?->end_time->format('H:i');
     }
     else{
         $worktime = 'vrij';
     }
-    //Update the status of each message to read
+
+    // Update the status of each message to read
     $msg->update(['read' => true]);
     // return dd( $msg->worker );
-    $this->display['topic'] = $topic;
-    $this->display['workdate'] = $msg->workday->date->format('l d F Y');
-    $this->display['workername'] = $msg->worker->full_name;
-    $this->display['worktime'] = $worktime ? $worktime : '';
-    $this->display['remark'] = $msg->remark;
-    $this->display['response'] = $msg->response;
+    $this->display = [
+        'topic' => $topic,
+        'workdate' => $msg->workday?->date->format('l d F Y'),
+        'workername' => $msg->worker->full_name,
+        'worktime' => $worktime ? $worktime : '',
+        'remark' => $msg->remark,
+        'replier' => $msg->replier,
+        'response' => $msg->response,
+    ];
 
     //Refresh messages volt component 
     $this->dispatch('refresh-data'); 
@@ -50,7 +55,7 @@ on(['set-modal-messsage-data' => function($messageId, $topic){
 >
     <form wire:submit.prevent="save" class="bg-white p-6 mr-3 rounded-xl shadow-md w-[90%] max-w-lg relative" @click.away="showMessageModal = false">
         @php 
-            $notHoliday = $this->message?->workday->type != 'holiday';
+            $notHoliday = $this->message?->workday?->type != 'holiday';
         @endphp
         <div class="absolute top-[-15px] right-[-15px] text-xs text-white w-8 h-8 bg-gray-600 hover:bg-gray-800 rounded-full flex justify-center items-center 
             cursor-pointer shadow-md duration-200"
@@ -62,7 +67,12 @@ on(['set-modal-messsage-data' => function($messageId, $topic){
 
             <!-- Top header -->
             <h3 class="text-xl font-medium pb-1 mb-2 b-ah-border">
-                {{ $this->display['topic'] }}
+                @if($this->message?->topic != 4)
+                    {{ $this->display['topic'] }}
+                @else
+                    <span>{{ $this->display['topic'] }} verzoek aan </span> 
+                    <span class="color-ah">{{ $this->display['replier'] }}</span>
+                @endif
             </h3>
             <div class="flex gap-2 font-light">
                 <span><i class="bi bi-calendar4-week text-blue-400"></i></span>
@@ -88,7 +98,7 @@ on(['set-modal-messsage-data' => function($messageId, $topic){
             <!-- Leader response -->
             @if($this->message?->response)
                 <div class="flex flex-col items-end">
-                    <div class="mt-4">Jeroen Blankevelt:</div>
+                    <div class="mt-4">{{$this->display['replier']}}:</div>
                     <div class="bg-gray-100 rounded-md p-2 inline-block font-light">
                         {{ $this->display['response'] }}
                     </div>

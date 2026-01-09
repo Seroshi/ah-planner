@@ -28,15 +28,45 @@ class ReplyToMessage implements ShouldQueue
      */
     public function handle(): void
     {
-        // Random reply with: 1) Approved or 2) Denied
-        $status = collect([1, 2])->random(); 
-        $responseText = ($status === 1) 
-            ? 'Oke, prima!' 
-            : 'Nee, kan helaas niet.';
 
-        $this->message->update([
-            'status' => $status,
-            'response' => $responseText,
-        ]);
+        if($this->message->topic == 4){ // Topic 4 are Shift swap messages
+
+            // Random reply with: 1) Approved or 2) Denied
+            $status = collect([1, 2])->random(); 
+            $responseText = ($status === 1) 
+                ? 'Ja hoor, geen probleem!' 
+                : 'Sorry, komt helaas niet uit.';
+
+            // Making sure the shifts gets swapped with the receiver
+            if($status == 1){
+                $workday = \App\Models\Workday::findOrFail($this->message->workday_id);
+                $workday?->update([
+                    'worker_id' => $this->message->receiver_id,
+                ]);
+            }
+
+            // Finalize message state and reset receiver_id
+            $this->message->update([
+                'status' => $status,
+                'response' => $responseText,
+                'receiver_id' => null,
+            ]);
+
+        }else{
+
+            // Random reply with: 1) Approved or 2) Denied
+            $status = collect([1, 2])->random(); 
+            $responseText = ($status === 1) 
+                ? 'Oke, prima!' 
+                : 'Nee, kan helaas niet.';
+
+            $this->message->update([
+                'status' => $status,
+                'replier' => 'Jeroen Blankevelt',
+                'response' => $responseText,
+            ]);
+
+        }
+        
     }
 }
