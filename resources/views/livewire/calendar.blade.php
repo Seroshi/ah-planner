@@ -48,6 +48,7 @@ $selectDate = function ($dateString) {
             timeDiff: $hourDiff,
             breakTime: $breakTime,
         );
+        $this->dispatch('open-modal');
 
     }else{
 
@@ -164,7 +165,7 @@ $getDayInfo = function ($date) {
 ?>
 
 <div wire:poll.10s class="calendar sm:max-w-[650px] mx-auto" 
-    x-data="{ showModal: false }" @close-modal.window="showModal = false"
+    x-data="{ showModal: false }" @open-modal.window="showModal = true" @close-modal.window="showModal = false"
 >
 
     <!-- DB disconnected Card -->
@@ -215,7 +216,7 @@ $getDayInfo = function ($date) {
                 $isSelected = $this->selectedDate === $dateStr;
                 $info = $this->getDayInfo($day['date']); 
             @endphp
-            <div wire:click="selectDate('{{ $dateStr }}'), showModal = true" class="p-2 cursor-pointer gap-1 h-[50px]
+            <div wire:click="selectDate('{{ $dateStr }}')" class="p-2 cursor-pointer gap-1
                 {{ $isSelected && !$day['isToday'] ? 'ring-2 ring-blue-400 ring-inset' : 'hover-gray' }}
                 {{ $day['isCurrentMonth'] ? '' : 'opacity-30' }}"
             >
