@@ -10,7 +10,7 @@
         <livewire:messages />
     </div>
 
-    <div class="w-full px-4 sm:px-10">
+    <div class="w-full px-8 sm:px-10">
         <livewire:calendar />
     </div>
 
