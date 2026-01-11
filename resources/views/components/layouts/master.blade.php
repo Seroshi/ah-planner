@@ -5,7 +5,7 @@
    <meta charset="utf-8">
    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-   <title>@yield('title')</title>
+   <title>AH Planner{{ ' - '.$title ?? '' }}</title>
 
    <link rel="icon" href="/favicon.ico" sizes="any">
    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
@@ -25,7 +25,15 @@
 
 <body class="bg-[#FDFDFC] text-[#1b1b18] flex items-center min-h-screen flex-col">
    <livewire:navigation />
-   @yield('content')
+
+   <main class="w-full">
+      {{ $slot }} 
+   </main>
+
+   <section>
+        <livewire:notifications.success />
+    </section>
+
 </body>
 
 </html>

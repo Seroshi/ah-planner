@@ -1,63 +1,81 @@
-/* 1. Imports first */
+/* 1. Cutom imports first */
 @import "./animation.css";
 @import "./calendar-styling.css";
 
-a{
+/* 2. Tailwind directives second */
+@import "tailwindcss";
+
+@theme {
+    --breakpoint-xs: 25rem;
+    --breakpoint-sm: 40rem;
+}
+
+@keyframes bounce-x {
+
+    0%,
+    100% {
+        transform: translateX(-25%);
+        animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+    }
+
+    50% {
+        transform: translateX(0);
+        animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+    }
+}
+
+a {
     cursor: pointer;
 }
 
-.color-ah { 
-    color: #00A2E5; 
+.color-ah {
+    color: #00A2E5;
 }
 
-.hover-gray:hover{
+.hover-gray:hover {
     background-color: #ffffff;
 }
 
-.gray-light{
+.gray-light {
     background-color: #f4f4f4;
 }
 
-.gray-base{
+.gray-base {
     background-color: #e6e6e6;
 }
 
-.bg-ah{ 
-    background-color: #00A2E5; 
-}
-.bg-ah-hover:hover{ 
-    background-color: #00b1fd; 
+.bg-ah {
+    background-color: #00A2E5;
 }
 
-
-.t-ah-border{ 
-    box-shadow: 0 -1px 0 #00A2E5; 
+.bg-ah-hover:hover {
+    background-color: #00b1fd;
 }
 
-.b-ah-border { 
+
+.t-ah-border {
+    box-shadow: 0 -1px 0 #00A2E5;
+}
+
+.b-ah-border {
     box-shadow: 0 1px 0 #00A2E5;
 }
 
-.t-border{ 
-    box-shadow: 0 -1px 0 #cccccc; 
+.t-border {
+    box-shadow: 0 -1px 0 #cccccc;
 }
 
-.b-border { 
+.b-border {
     box-shadow: 0 1px 0 #cccccc;
 }
 
-.btn{
+.btn {
     display: inline-block;
     border-radius: 9999px;
     cursor: pointer;
 }
 
-.stroke-1{
+.stroke-1 {
     -webkit-text-stroke: 1px black;
     text-stroke: 1px black;
 }
-
-/* 2. Tailwind directives second */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;

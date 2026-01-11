@@ -37,7 +37,7 @@ $totalCount = computed(function () {
 
 ?>
 
-<div class="mb-2 sm:max-w-[650px] mx-auto" x-data="{ showMessageModal: false }"
+<div class="mb-2 sm:max-w-[650px] py-10 mx-auto" x-data="{ showMessageModal: false }"
 		x-on:refresh-data.window="
 		const urlParams = new URLSearchParams(window.location.search);
 		const currentPage = urlParams.get('page') || 1;
@@ -46,12 +46,19 @@ $totalCount = computed(function () {
 
 	<section wire:poll.8s>
 
-		<h3 class="text-lg font-bold text-center mb-2">Mijn berichten ({{ $this->totalCount }})</h3>
+		<!-- Breadcrumbs -->
+		<div class="flex items-center mb-8">
+			<a href="{{route('calendar')}}">Werkrooster</a>
+			<i class="bi bi-chevron-right text-xs mx-2 stroke-1"></i>
+			<span class="text-gray-400">Berichten</span>
+		</div>
+
+		<h3 class="text-lg font-bold text-center mt-8 mb-2">Mijn berichten ({{ $this->totalCount }})</h3>
 
 		@if($this->messages()->count() > 0)
-		<div wire:key="message-list" class="flex flex-col border rounded-xl overflow-hidden cursor-pointer">
+		<div wire:key="message-list" class="flex flex-col border border-gray-300 rounded-xl overflow-hidden cursor-pointer">
 
-			<div class="flex bg-gray-100 border-b border-gray-200 font-bold text-base">
+			<div class="flex gray-light font-bold text-base border-b border-gray-300">
 				<div class="w-[10%] p-3 overflow-hidden">Status</div>
 				<div class="w-[65%] p-3 ml-2">Onderwerp</div>
 				<div class="w-[25%] p-3 ml-6">Verstuurd</div>
@@ -59,7 +66,7 @@ $totalCount = computed(function () {
 
 			<!-- Message item -->
 			@foreach($this->messages as $message)
-			<div class="flex border-b last:border-b-0 hover:bg-gray-50 transition {{$message->read ? 'bg-white' : 'gray-light font-medium'}}" 
+			<div class="flex border-b border-gray-200 last:border-b-0 hover:bg-gray-50 transition {{$message->read ? 'bg-white' : 'gray-light font-medium'}}" 
 					@click="$dispatch('set-modal-message-data', 
 					{ 
 						messageId: '{{ $message->id }}',
@@ -68,17 +75,17 @@ $totalCount = computed(function () {
 					showMessageModal = true">
 
 				<!-- Status icon -->
-				<div class="w-[10%] p-3 text-sm">
+				<div class="w-[10%] p-3 text-sm flex justify-center items-center">
 					@if($message->status == 1)
-					<div class="rounded-full w-full shrink-0 text-indigo-400 flex justify-center items-center">
+					<div class="rounded-full w-full shrink-0 text-indigo-400 text-center">
 						<i class="text-lg bi-check2-circle"></i>
 					</div>
 					@elseif($message->status == 2)
-					<div class="rounded-full w-full shrink-0 text-amber-600 flex justify-center items-center">
+					<div class="rounded-full w-full shrink-0 text-amber-600 text-center">
 						<i class="text-base bi bi-x-circle"></i>
 					</div>
 					@else
-					<div class="rounded-full w-full shrink-0 text-gray-400 flex justify-center items-center">
+					<div class="rounded-full w-full shrink-0 text-gray-400 text-center">
 						<i class="text-lg bi-hourglass-split inline-block animate-spin-pause-ease"></i>
 					</div>
 					@endif

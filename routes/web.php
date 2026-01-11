@@ -3,15 +3,18 @@
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 
-Route::get('/', function () {
-    return view('welcome');
-})->name('home');
+// Route::get('/', function () {
+//     return view('welcome');
+// })->name('home');
 
-Volt::route('/calendar', 'calendar')
+Volt::route('/', 'calendar')
     ->name('calendar');
 
-Volt::route('/messages', 'messages')
+Volt::route('/berichten', 'messages')
     ->name('messages');
+
+Volt::route('/shift-ruil', 'messages')
+    ->name('swap');
 
 Volt::route('/shift-ruil/{workday}', 'shift-swap')
     ->name('shift.swap');

@@ -165,12 +165,14 @@ $save = function () {
             <form wire:submit.prevent="save">
                 <div>
                     <label for="topic" class="block text-base font-bold mb-1">Onderwerp *</label>
-                    <select wire:model="topic" class="bg-gray-100 rounded-md" @disabled($this->topic)>
+                    <select wire:model="topic" class="bg-gray-100 rounded-md p-2 cursor-pointer focus:outline focus:outline-blue-600">
                         <option value="" disabled>Kies een onderwerp</option>
                         @foreach($this->topicOptions as $index => $option)
                             <!-- Skip shift ruil -->
                             @if($index != 4)
-                                <option value="{{$index}}">{{$option['value']}}</option>
+                                <option value="{{$index}}">
+                                    {{$option['value']}}
+                                </option>
                             @endif
                         @endforeach
                     </select>
@@ -179,7 +181,7 @@ $save = function () {
 
                 <div class="mt-2">
                     <label for="remark" class="text-base font-bold">Bericht *</label>
-                    <textarea wire:model="remark" @readonly($this->remark) class="w-full bg-gray-100 rounded-md focus:border-blue focus:outline-none focus:ring-1 mt-2 p-2"></textarea>
+                    <textarea wire:model="remark" @readonly($this->remark) class="w-full bg-gray-100 rounded-md focus:outline focus:outline-blue-600 mt-2 p-2"></textarea>
                     @error('remark') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                 </div>
 

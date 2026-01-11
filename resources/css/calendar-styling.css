@@ -1,4 +1,4 @@
-.calendar .today{
+.calendar .today {
     background-color: #00A2E5;
     width: 27px;
     height: 27px;
@@ -6,18 +6,17 @@
     color: white;
 }
 
-.calendar .day{
-    /* border: 1px solid #d1d1d1; */
+.calendar .day {
     height: 30px;
 }
 
-.calendar .dot{
+.calendar .dot {
     width: 6px;
     height: 6px;
     border-radius: 100%;
 }
 
-.calendar .options{
+.calendar .options {
     width: 30px;
     height: 30px;
     border-radius: 100%;

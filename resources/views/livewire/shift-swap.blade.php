@@ -108,7 +108,7 @@ $saveData = function(){
     // Dispatch a success notification
     session()->flash('notification', 'Shiftruil verzoek verstuurd!');
 
-    return $this->redirectRoute('home', navigate: true);
+    return $this->redirectRoute('calendar', navigate: true);
 
 };
 
@@ -119,13 +119,13 @@ $resetList = function(){
 ?>
 
 
-<div class="w-full px-5" x-data="{ showModal: false }" @close-modal.window="showModal = false">
+<div class="w-full px-5 py-10" x-data="{ showModal: false }" @close-modal.window="showModal = false">
 
-    <section class="w-full sm:w-[600px] max-w-4xl px-6 py-6 mx-auto mb-10 bg-white p-3 border rounded-xl">
+    <section class="w-full sm:w-[600px] max-w-4xl px-6 mx-auto mb-10 rounded-xl">
 
         <!-- Breadcrumbs -->
         <div class="flex items-center mb-8">
-            <a href="{{route('home')}}">Werkrooster</a>
+            <a href="{{route('calendar')}}">Werkrooster</a>
             <i class="bi bi-chevron-right text-xs mx-2 stroke-1"></i>
             <span class="text-gray-400">Shift ruilen</span>
         </div>
@@ -182,10 +182,12 @@ $resetList = function(){
                 @if($this->selectedWorkerId > 0)
                     <span class="color-ah">{{ $this->getWorker?->first_name }}?</span>
                     <button wire:click="saveData()" @click="showModal = true" class="btn bg-ah bg-ah-hover text-white py-1 px-5">
-                        Ja <i class="bi bi-chevron-right ml-1 inline-block transition-transform duration-500 animate-bounce-x"></i>
+                        Ja <i class="bi bi-chevron-right ml-1 inline-block animate-bounce-x"></i>
                     </button>
-                    <div wire:click="resetList()" class="btn bg-gray-100 hover:bg-gray-300 rounded-full w-[35px] h-[35px] flex items-center justify-center">
-                        <i class="bi bi-x font-xl"></i>
+                    <div wire:click="resetList()" class="btn bg-gray-100 hover:bg-gray-300 rounded-full w-[35px] h-[35px]">
+                        <span class="flex items-center justify-center">
+                            <i class="bi bi-x font-xl mt-[3px]"></i>
+                        </span>
                     </div>
                 @else
                     <span>
@@ -200,7 +202,7 @@ $resetList = function(){
             <div class="flex gap-2 mb-3">
                 <div class="grow">
                     <label for=""></label>
-                    <input wire:model="keywords" class="py-2 px-4 bg-gray-100 w-full rounded-xl" type="text" placeholder="Vind op naam">
+                    <input wire:model="keywords" class="py-2 px-4 bg-gray-100 w-full rounded-xl focus:outline focus:outline-blue-600" type="text" placeholder="Vind op naam">
                 </div>
                 <div class="w-[80px]">
                     <button type="submit" class="w-full bg-ah bg-ah-hover text-white py-2 rounded-full">
@@ -209,10 +211,10 @@ $resetList = function(){
                 </div>
             </div>
             
-            <div class="">
+            <div class="border border-gray-300 rounded-xl overflow-hidden">
                 @if($this->collectionData)
                     @foreach($this->collectionData as $person)
-                        <div wire:click="setWorkerId({{$person->id}})" class="w-full border py-1 px-3 hover:bg-gray-100 cursor-pointer">
+                        <div wire:click="setWorkerId({{$person->id}})" class="w-full border-b last:border-b-0 border-gray-300 py-1 px-3 hover:bg-gray-100 cursor-pointer">
                             {{ $person->first_name }}
                             {{ $person->middle_part }} 
                             {{ $person->last_name }}
