@@ -66,7 +66,6 @@ $save = function () {
     $message = Message::create([
         'worker_id' => $getWorker?->id,
         'workday_id' => $this->workday->id ?? null,
-        'date' => null,
         'topic' => $this->topic,
         'remark' => $this->remark,
         'status' => 0,
@@ -166,7 +165,7 @@ $save = function () {
             <form wire:submit.prevent="save">
                 <div>
                     <label for="topic" class="block text-base font-bold mb-1">Onderwerp *</label>
-                    <select wire:model="topic" @disabled($this->topic) class="bg-gray-100 rounded-md p-2">
+                    <select wire:model="topic" class="bg-gray-100 rounded-md" @disabled($this->topic)>
                         <option value="" disabled>Kies een onderwerp</option>
                         @foreach($this->topicOptions as $index => $option)
                             <!-- Skip shift ruil -->
@@ -185,7 +184,7 @@ $save = function () {
                 </div>
 
                 @if(!$this->remark)
-                    <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700">
+                    <button type="submit" class="w-full text-white mt-2 py-2 rounded-xl bg-ah bg-ah-hover">
                         Stuur opmerking
                     </button>
                 @else

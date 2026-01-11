@@ -4,6 +4,7 @@ export default {
     "./resources/**/*.blade.php",
     "./resources/**/*.js",
     "./resources/**/*.vue",
+    "./resources/views/vendor/pagination/*.blade.php",
   ],
   theme: {
     extend: {
@@ -24,5 +25,7 @@ export default {
       }
     },
   },
-  plugins: [],
+  plugins: [
+    require('@tailwindcss/forms'),
+  ],
 }

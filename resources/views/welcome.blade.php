@@ -6,7 +6,7 @@
 
 @section('content')
 
-    <div class="w-full px-4 py-2 sm:px-10">
+    <div class="w-full px-8 py-2 sm:px-10">
         <livewire:messages />
     </div>
 

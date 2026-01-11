@@ -33,7 +33,7 @@ on(['set-modal-message-data' => function($messageId, $topic){
 
     // Update the status of each message to read
     $msg->update(['read' => true]);
-    // return dd( $msg->worker );
+
     $this->display = [
         'topic' => $topic,
         'workdate' => $msg->workday?->date->format('l d F Y'),
