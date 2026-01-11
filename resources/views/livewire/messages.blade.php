@@ -18,35 +18,17 @@ $refreshMessages = function ($currentPage = null) {
    ($currentPage) ? $this->page = (int) $currentPage : 1;
 };
 
-// on(['refresh-data' => function () {
-// }]);
-
+// Grab all corresponding messages
 $messages = computed(function () {
     $getWorker = \App\Models\Worker::first();
     if($getWorker){
         return Message::query()
             ->where('worker_id', $getWorker->id)
             ->orderBy('created_at', 'desc') // Shortcut for orderBy('updated_at', 'desc')
-            ->paginate(3, ['*'], 'page', $this->page) // Force the page to stick to the pagenumber
+            ->paginate(8, ['*'], 'page', $this->page) // Force the page to stick to the pagenumber
 				->withPath('/'); // Prevents the URL from being confused
     }else return abort(404, 'No record found in the database.');
     
-});
-
-$categorizePeople = computed(function () {
-
-	//Categorize their names position
-	return collect()->map(function ($fullname) {
-		$parts = preg_split('/\s+/', trim($fullname)); //Removing any whitespace
-		$count = count($parts);
-		return [
-			'firstname' => $parts[0],
-			'middlename' => ($count > 2 ? array_slice($parts, 1, -1) : ''), //Take middle part
-			'lastname' => ($count > 1 ? end($parts) : ''), //Take last part
-			'fullname' => implode(' ', $parts),
-			'user_id' => strtoupper(uniqid()),
-		];
-	});
 });
 
 $totalCount = computed(function () {
