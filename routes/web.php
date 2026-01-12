@@ -13,7 +13,7 @@ Volt::route('/', 'calendar')
 Volt::route('/berichten', 'messages')
     ->name('messages');
 
-Volt::route('/shift-ruil', 'messages')
+Volt::route('/shift-ruil', 'swap')
     ->name('swap');
 
 Volt::route('/shift-ruil/{workday}', 'shift-swap')

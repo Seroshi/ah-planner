@@ -1,6 +1,6 @@
 <?php
 
-use function Livewire\Volt\{state, mount, computed};
+use function Livewire\Volt\{layout, title, state, mount, computed};
 use App\Models\Workday;
 use App\Models\Worker;
 use App\Models\Message;
@@ -8,6 +8,8 @@ use App\Models\ShiftSwap;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
+layout('components.layouts.master');
+title('Shift ruil');
 
 state([
     'workday' => '',
@@ -73,8 +75,6 @@ $choose = function () {
 
     $this->searchResults = $data;
 
-    // Clear the form
-    // $this->reset(['keywords']);
 };
 
 //Creates the shift swap request
@@ -119,17 +119,18 @@ $resetList = function(){
 ?>
 
 
-<div class="w-full px-5 py-10" x-data="{ showModal: false }" @close-modal.window="showModal = false">
+<div class="px-8 py-10 sm:px-0" x-data="{ showModal: false }" @close-modal.window="showModal = false">
 
-    <section class="w-full sm:w-[600px] max-w-4xl px-6 mx-auto mb-10 rounded-xl">
+    <section class="sm:w-[580px] md:w-[720px] mx-auto">
 
         <!-- Breadcrumbs -->
         <div class="flex items-center mb-8">
             <a href="{{route('calendar')}}">Werkrooster</a>
             <i class="bi bi-chevron-right text-xs mx-2 stroke-1"></i>
-            <span class="text-gray-400">Shift ruilen</span>
+            <a href="{{route('swap')}}">Shift ruilen</a>
+            <i class="bi bi-chevron-right text-xs mx-2 stroke-1"></i>
+            <span class="text-gray-400">Mijn shift</span>
         </div>
-
         <div class="text-gray-500 mb-4">
             <div><i class="bi bi-building text-gray-400""></i> AH: 1645</div>
             <div><i class="bi bi-check-circle text-gray-400"></i> Geregistreerd door: Jeroen Blankeveld</div>
