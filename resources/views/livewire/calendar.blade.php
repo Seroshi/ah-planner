@@ -14,11 +14,10 @@ state([
     'startsAt' => Carbon::now(),
     'selectedDate' => fn() => now()->toDateString(), // Track selection by YYYY-MM-DD
     'selectedId' => 1,
-    'workday' => null,
 ]);
 
 mount(function () {
-    // return dd($this->getTest);
+
 });
 
 $dbConnection = computed(function () {
@@ -30,12 +29,20 @@ $dbConnection = computed(function () {
     }
 });
 
-$weekNumber = computed(function () {
-    return Carbon::parse($this->selectedDate)->weekOfYear;
+$weekPeriod = computed(function () {
+    $selectedDate = Carbon::parse($this->selectedDate);
+    $startWeek =    $selectedDate->copy()->startOfWeek(Carbon::MONDAY);
+    $endWeek =      $selectedDate->copy()->endOfWeek(Carbon::SUNDAY);
+    $startMonth =   $startWeek->format('m');
+    $endMonth =     $endWeek->format('m');
+    if($startMonth === $endMonth) $weekDisplay = $startWeek->format('d').' t/m '.$endWeek->format('d F');
+    else $weekDisplay = $startWeek->format('d M').' t/m '.$endWeek->format('d M');
+    
+    return [
+        'weekNum' => $selectedDate->weekOfYear,
+        'weekDisplay' => $weekDisplay, 
+    ];
 });
-
-// Action to switch views
-$setView = fn($view) => $this->view = $view;
 
 //Capture click from the calendar day
 $selectDate = function ($dateString) {
@@ -67,6 +74,7 @@ $calendarGrid = computed(function () {
     while ($currentDay <= $end) {
         $days[] = [
             'date' => $currentDay->copy(),
+            'dateStr' => $currentDay->format('Y-m-d'),
             'isCurrentMonth' => $currentDay->month === $this->startsAt->month,
             'isToday' => $currentDay->isToday(),
         ];
@@ -76,17 +84,32 @@ $calendarGrid = computed(function () {
     return $days;
 });
 
-$workdayData = computed(function () {
-    try {
-        $worker_id = 1;
-        // Fetch all workdays and turn them into a key-value array [ 'date' => [data] ]
-        return Workday::where('worker_id', $worker_id)->get()->keyBy(function ($item) {
-            return $item->date->format('Y-m-d');
-        })->toArray();
-    } catch (\Exception $e) { // Database is down!  
-        report($e);
-        return [];
-    }
+// Runs once in the mount and have the work data organized
+$workdayRecords = computed(function (){
+
+    $data = Workday::where('worker_id', 1)
+        ->get()
+        ->keyBy(fn($item) => $item->date->toDateString());
+
+    return $data->map(function ($record){
+        $hourDiff = $record->start_time?->diffInHours($record->end_time);
+        $config = match($record->type) {
+            'work'    => ['label' => 'shift',  'bg' => 'bg-blue-100',   'dot' => 'bg-blue-400', 'icon' => 'bi bi-clock'],
+            'holiday' => ['label' => 'verlof', 'bg' => 'bg-orange-100', 'dot' => 'bg-yellow-500', 'icon' => 'bi bi-brightness-alt-high-fill'],
+            'sick'    => ['label' => 'ziek',   'bg' => 'bg-red-200',    'dot' => 'bg-red-500', 'icon' => 'bi bi-info-circle'],
+            default   => null
+        };
+        return collect([
+            'workId' => $record->id,
+            'config' => $config,
+            'date' => $record->date->toDateString(),
+            'workday' => $record->date->format('l d M Y'),
+            'worktime' => ($record->start_time) ? $record->start_time->format('H:i') .' - '. $record->end_time->format('H:i') : null,
+            'hourDiff' => $hourDiff,
+            'breakTime' => $record->getBreakTime($hourDiff),
+        ]);
+    });
+
 });
 
 // Get info from the selected day and it's corresponding week
@@ -100,14 +123,12 @@ $selectedWeekDays = computed(function () {
 
         // 2. Fetch only the records for this specific week from DB
         $getWorker = \App\Models\Worker::first();
-        $weeklyRecords = Workday::where('worker_id', $getWorker->id)
-            ->whereBetween('date', [
-                $startOfWeek->toDateString(),
-                $endOfWeek->toDateString()
-            ])
-            ->get()
-            ->keyBy(fn($item) => $item->date->format('Y-m-d'));
 
+        $weekdayRecords = $this->workdayRecords
+            ->whereBetween('date', [$startOfWeek->toDateString(), $endOfWeek->toDateString()])
+            ->toArray();
+
+            
         // 3. Build the 7-day array for the UI
         $days = [];
         for ($i = 0; $i < 7; $i++) {
@@ -118,25 +139,18 @@ $selectedWeekDays = computed(function () {
                 'date' => $current,
                 'dateString' => $dateStr,
                 'isToday' => $current->isToday(),
+                'onlyPast' => $current->isPast() && !$current->isToday(),
                 'isSelected' => $this->selectedDate === $dateStr,
-                // Check if our small DB result has a record for this day
-                'info' => $weeklyRecords[$dateStr] ?? null,
+                'details' => $weekdayRecords[$dateStr] ?? null,
             ];
-        }
-
+        };
         return $days;
+
     } catch (\Exception $e) { //Database is down! 
         report($e); //Send error to logs 
         return [];
     }
 });
-
-// Helper function to check the date string
-$getDayInfo = function ($date) {
-    $data = $this->workdayData[$date->toDateString()] ?? null;
-    $this->workday = $data;
-    return $data;
-};
 
 ?>
 
@@ -202,54 +216,42 @@ $getDayInfo = function ($date) {
             <!-- Content of calendar (Days grid) -->
             <div class="gray-light grid grid-cols-7 mb-8 border border-gray-300">
                 @foreach($this->calendarGrid as $day)
+
                 @php
-                $dateStr = $day['date']->toDateString();
-                $isSelected = $this->selectedDate === $dateStr;
-                $info = $this->getDayInfo($day['date']);
+                    $info = $this->workdayRecords[$day['dateStr']] ?? null ;
                 @endphp
 
                 <!-- Dayblock (clickable button) -->
-                <div wire:click="selectDate('{{ $dateStr }}')" class="p-2 cursor-pointer gap-1 h-[50px] transition duration-150 ease-in-out
-                        {{ $isSelected && !$day['isToday'] ? 'ring-2 ring-blue-400 ring-inset' : 'hover-gray' }}
+                <div wire:click="selectDate('{{ $day['dateStr'] }}')" class="p-2 cursor-pointer gap-1 h-[50px] transition duration-150 ease-in-out
+                        {{ $this->selectedDate === $day['dateStr'] && !$day['isToday'] ? 'ring-2 ring-blue-400 ring-inset' : 'hover-gray' }}
                         {{ $day['isCurrentMonth'] ? '' : 'opacity-30' }}">
+                    
                     <div class="sm:text-[13px] font-bold flex sm:justify-between items-center items-start">
-                        @if($day['isToday'])
+                    @if($day['isToday'])
                         <!-- Today highlighter  -->
-                        <p
-                            class="font-bold today flex justify-center items-center mt-[-2px] ml-[-4px] sm:ml-[-6px] sm:mt-[-4px]">
-                            {{ $day['date']->day }}
-                        </p>
-                        @else
+                        <p class="font-bold today flex justify-center items-center mt-[-2px] ml-[-4px] sm:ml-[-6px] sm:mt-[-4px]">{{ $day['date']->day }}</p>
+                    @else
                         <!-- Daynumber of the month -->
                         <p class="font-bold ">{{ $day['date']->day }}</p>
-                        @endif
-
-                        <!-- Tags types for calendar categorization -->
-                        @if($info)
-                        @if($info['type'] === 'work')
-                        <span class="bg-blue-100 text-[9px] px-1 rounded hidden sm:block">
-                            shift
-                        </span>
-                        <div class="dot sm:hidden bg-blue-400 ml-1"></div>
-                        @elseif($info['type'] === 'holiday')
-                        <span class="bg-orange-100 text-[9px] px-1 rounded hidden sm:block">
-                            verlof
-                        </span>
-                        <div class="dot sm:hidden bg-yellow-500 ml-1"></div>
-                        @elseif($info['type'] === 'sick')
-                        <span class="bg-red-200 text-[9px] px-1 rounded hidden sm:block">
-                            ziek
-                        </span>
-                        <div class="dot sm:hidden bg-red-500 ml-1"></div>
-                        @endif
-                        @endif
-                    </div>
-
-                    @if($info && $info['type'] != 'holiday')
-                    <div class="text-[10px] text-gray-600 hidden sm:block">
-                        {{ $info['start_time'] }} - {{ $info['end_time'] }}
-                    </div>
                     @endif
+
+                    <!-- Tags types for calendar categorization -->
+                        @if( isset($info) )
+                        <div>
+                            <span class="text-[9px] px-1 rounded hidden sm:block {{ $info['config']['bg'] }}">
+                                {{ $info['config']['label'] }}
+                            </span>
+                            <span class="dot sm:hidden ml-1 {{ $info['config']['dot'] }}"></span>
+                        </div>
+                        @endif
+                    </div>
+
+                    @if( isset($info) )
+                        <div class="text-[10px] text-gray-600 hidden sm:block text-center">
+                            {{ $info['worktime'] }}
+                        </div>
+                    @endif
+
                 </div>
                 @endforeach
             </div>
@@ -258,76 +260,53 @@ $getDayInfo = function ($date) {
 
         <!-- Week Information section-->
         <section>
-
-            <!-- Top section -->
-            <div class="text-center" id="test">
-                <h4 class="text-lg font-bold">Mijn shiften in week {{ $this->weekNumber }}</h4>
-                <div class="mb-2 sm:text-[14px] ">
-                    @php
-                    $dayData = $this->selectedWeekDays;
-                    $firstDay = $dayData[0]['date'];
-                    $lastDay = $dayData[6]['date'];
-                    @endphp
-
-                    @if($dayData)
-                    @if($firstDay->format('m') == $lastDay->format('m'))
-                    {{ $firstDay->format('d') }} t/m
-                    {{ $lastDay->format('d') }}
-                    <span>{{$firstDay->format('F')}}</span>
-                    @else
-                    <span>{{ $firstDay->format('d') }} {{ $firstDay->format('F') }} t/m
-                        {{ $lastDay->format('d') }} {{ $lastDay->format('F') }}</span>
-                    @endif
-                    @endif
-                </div>
+        @php 
+        
+        @endphp
+            <div class="text-center">
+                <h4 class="text-lg font-bold">Mijn shiften in week {{ $this->weekPeriod['weekNum'] }}</h4>
+                <p class="mb-2 sm:text-[14px] ">{{ $this->weekPeriod['weekDisplay'] }}</p>
             </div>
 
-            <!-- Content section (week overview) -->
             @foreach($this->selectedWeekDays as $day)
-            @php
-            $hourDiff = $day['info']?->start_time?->diffInHours($day['info']?->end_time) ?? 0;
-            $getBreakTime = \App\Models\Workday::getBreakTime($hourDiff );
-            $pastShift = $day['date']?->isPast() && !$day['isToday'];
-            @endphp
-            @if($day['info']?->type)
+            @if( isset($day['details']) )
             <div class="sm:text-[14px] my-[6px] border border-gray-300 rounded-xl
-                        {{$day['isSelected'] ? 'ring-1 ring-blue-400 ring-outset' : ''}}">
-                <div class="flex justify-between items-center h-[65px] rounded-xl
-                            {{$pastShift ? 'gray-light' : 'bg-white'}}">
-                    <div class="grow overflow-x-hidden px-3">
-                        @if($day['info']?->type)
+                    {{$day['isSelected'] ? 'ring-1 ring-blue-400 ring-outset' : ''}}">
+                <div class="flex justify-between items-center h-[65px] pl-3 rounded-xl {{$day['onlyPast'] ? 'gray-light' : 'bg-white'}}">
 
-                        <!-- Shift day -->
-                        <div class="whitespace-nowrap overflow-x-hidden">{{$day['date']->format('D d M Y')}}</div>
-
-                        <!-- Shift details -->
+                    <div class="whitespace-nowrap overflow-x-hidden">
+                        
+                        <!-- Workday display-->
+                        <span>{{$day['details']['workday']}}</span>
+                        
                         <div class="flex gap-1">
-                            @if($day['info']->type === 'work')
-
                             <!-- Icons 1/4 Work type -->
                             <div class="flex-none w-[110px]">
-                                @if($day['date']->isPast() && !$day['isToday'])
-                                <i class="bi bi-check-circle text-blue-400"></i>
-                                @else
-                                <i class="bi bi-clock text-blue-400"></i>
-                                @endif
+                                <i class="text-blue-400 {{ $day['details']['config']['icon'] }}"></i>  
                                 <span class="font-light">
-                                    {{$day['info']?->start_time->format('H:i')}} - {{$day['info']?->end_time->format('H:i')}}
+                                    @if($day['details']['config']['label'] === 'shift')
+                                    <span>{{ $day['details']['worktime'] }}</span>
+                                    @elseif($day['details']['config']['label'] === 'verlof')
+                                    <span>Vrij</span>
+                                    @else
+                                    <span>Ziek</span>
+                                    @endif
                                 </span>
                             </div>
 
+                            @if($day['details']['config']['label'] === 'shift')
                             <!-- Icons 2/4 Total hours -->
                             <div class="flex-none w-[80px]">
                                 <i class="bi bi-clock-history text-blue-400"></i>
                                 <span class="font-light">
-                                    {{ $hourDiff }} u.
+                                    {{ $day['details']['hourDiff'] }} u.
                                 </span>
                             </div>
 
                             <!-- Icons 3/4 Break -->
                             <div class="flex-none w-[110px]">
                                 <i class="bi bi-cup-hot text-blue-400"></i>
-                                <span class="font-light">{{ $getBreakTime }}</span>
+                                <span class="font-light">{{ $day['details']['breakTime'] }}</span>
                             </div>
 
                             <!-- Icons 4/4 Label -->
@@ -335,34 +314,18 @@ $getDayInfo = function ($date) {
                                 <i class="bi bi-tags text-blue-400"></i>
                                 <span class="font-light">vullen</span>
                             </div>
-
-                            @elseif($day['info']->type === 'holiday')
-                            <!-- Icons 1/4 Holiday type -->
-                            <div class="flex-none w-[110px]">
-                                <i class="bi bi-brightness-alt-high-fill text-blue-400"></i>
-                                <span class="font-light">vrij</span>
-                            </div>
-
-                            @elseif($day['info']->type === 'sick')
-                            <!-- Icons 1/4 Sick type -->
-                            <div class="flex-none w-[110px]">
-                                <i class="bi bi-info-circle text-orange-500"></i>
-                                <span class="font-light">{{$day['info']?->start_time->format('H:i')}} -
-                                    {{$day['info']?->end_time->format('H:i')}}</span>
-                                <div class="text-orange-500 ml-3">Ziek</div>
-                            </div>
                             @endif
 
                         </div>
-                        @endif
-                    </div>
 
+                    </div>
+                    
                     <!-- Dots button with dispatch -->
                     <div class="flex px-1 h-full items-center cursor-pointer bg-blue-400 hover:bg-blue-300 rounded-r-xl ransition duration-150 ease-in-out">
                         <div class="flex justify-center items-center" @click="$dispatch('set-day-data', { 
-                                        shiftID: '{{ $day['info']->id }}',
-                                        'timeDiff': '{{ $hourDiff }}',
-                                        'breakTime': '{{ $getBreakTime }}'
+                                        shiftID: '{{ $day['details']['workId'] }}',
+                                        'timeDiff': '{{ $day['details']['hourDiff'] }}',
+                                        'breakTime': '{{ $day['details']['breakTime'] }}'
                                     }),
                                     showModal = true">
                             <i class="text-[18px] bi bi-three-dots-vertical text-white p-2"></i>
