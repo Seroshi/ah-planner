@@ -3,11 +3,10 @@
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 
-// Route::get('/', function () {
-//     return view('welcome');
-// })->name('home');
-
 Volt::route('/', 'calendar')
+    ->name('home');
+
+Volt::route('/calendar', 'calendar')
     ->name('calendar');
 
 Volt::route('/berichten', 'messages')

@@ -20,6 +20,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Change names to Dutch
+        \Carbon\Carbon::setLocale('nl');
+        setlocale(LC_TIME, 'nl_NL');
+
         Paginator::defaultView('vendor.pagination.tailwind');
     }
 }

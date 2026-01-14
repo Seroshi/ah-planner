@@ -25,7 +25,7 @@ on(['set-modal-message-data' => function($messageId, $topic){
     $this->message = $msg;
 
     if($msg->workday?->type != 'holiday'){
-        $worktime = $msg->workday?->start_time->format('H:i').' - '.$msg->workday?->end_time->format('H:i');
+        $worktime = $msg->workday?->start_time->translatedFormat('H:i').' - '.$msg->workday?->end_time->translatedFormat('H:i');
     }
     else{
         $worktime = 'vrij';
@@ -36,7 +36,7 @@ on(['set-modal-message-data' => function($messageId, $topic){
 
     $this->display = [
         'topic' => $topic,
-        'workdate' => $msg->workday?->date->format('l d F Y'),
+        'workdate' => $msg->workday?->date->translatedFormat('l d F Y'),
         'workername' => $msg->worker->full_name,
         'worktime' => $worktime ? $worktime : '',
         'remark' => $msg->remark,

@@ -12,12 +12,14 @@ layout('components.layouts.master');
 title('Shift ruil');
 
 state([
+    'user_id' => 1,
     'workday' => '',
     'display' => [],
     'condition' => [],
     'keywords' => '',
     'searchResults' => [],
     'selectedWorkerId' => '',
+    'noResults' => false,
 ]);
 
 mount(function (Workday $workday) {
@@ -26,55 +28,62 @@ mount(function (Workday $workday) {
     $this->display = [
         'label' => $workday->label,
         'worker' => $workday->worker->full_name,
-        'workday' => $workday->date->format('l d M Y'),
-        'worktime' => $workday->start_time->format('H:i')." - ".$workday->end_time->format('H:i'),
+        'workday' => $workday->date->translatedFormat('l d M Y'),
+        'worktime' => $workday->start_time->translatedFormat('H:i')." - ".$workday->end_time->translatedFormat('H:i'),
         'hourDiff' => $hourDiff,
         'breaktime' => $workday->getBreakTime($hourDiff),
     ];
     $this->condition = [
         'isHoliday' => ($workday->type === 'holiday') ? true : false,
     ];
+    
+    $this->searchResults = $this->collectionData();
 });
 
-//Grab the worker ID and assign to getWorkerId
+//Confirms your worker choice and limit list to that worker
 $setWorkerId = function($id){
     $this->selectedWorkerId = $id;
+    $this->searchResults = Worker::where('id', $id)->get();
 };
 
+// Find worker based on ID 
 $getWorker = computed(function(){
     return Worker::findOrFail($this->selectedWorkerId);
 });
 
-//Either show search resuls or the full list
+// Get the full list of workers
 $collectionData = computed(function() {
-    // 1 Return a collection of just the selected worker
-    if ($this->selectedWorkerId > 0) {
-        return Worker::where('id', $this->selectedWorkerId)->get();
-    }
-
-    // 2. Return only the search results
-    if (!empty($this->keywords) && count($this->searchResults) > 0) {
-        return $this->searchResults;
-    }
-
-    // 3. Default: Return the full list
-    return Worker::orderBy('first_name', 'asc')->get();
+    return Worker::orderBy('first_name', 'asc')
+        ->where('id', '!=', $this->user_id)
+        ->get();
 });
 
-// Subform to select a worker
-$choose = function () {
+// Show results of the keywords search
+$searchWorkers = function() {
 
     $data = Worker::where('first_name', 'like', '%'.$this->keywords.'%')
         ->orWhere('middle_part', 'like', '%'.$this->keywords.'%')
         ->orWhere('last_name', 'like', '%'.$this->keywords.'%')
+        ->where('id', '!=', $this->user_id)
         ->limit(10)
         ->get();
 
-    if(count($data) == 1) $this->selectedWorkerId = $data->first()->id;
-    else $this->selectedWorkerId = ''; // Reset selected worker
+    if(count($data) >= 1){
+        $this->searchResults = $data;
+        $this->noResults = false;
+    }else{
+        $this->searchResults = '';
+        $this->noResults = true;
+    }
+    
+};
 
-    $this->searchResults = $data;
-
+// Reset values from the keywords and the selected worker
+$resetList = function(){
+    $this->selectedWorkerId = '';
+    if(!empty($this->keywords)) $this->keywords = '';
+    $this->noResults = false;
+    $this->searchResults = $this->collectionData();
 };
 
 //Creates the shift swap request
@@ -84,7 +93,7 @@ $saveData = function(){
     DB::transaction(function () {
 
         $message = Message::create([
-            'worker_id' => 1,
+            'worker_id' => $this->user_id,
             'receiver_id' => $this->selectedWorkerId,
             'workday_id' => $this->workday->id,
             'topic' => 4, // 'Shift ruil verzoek'
@@ -94,7 +103,7 @@ $saveData = function(){
         ]);
 
         $shiftSwap = ShiftSwap::create([
-            'requester_id' => 1,
+            'requester_id' => $this->user_id,
             'receiver_id' => $this->selectedWorkerId,
             'workday_id_1' => $this->workday->id,
             'status' => false,
@@ -108,12 +117,8 @@ $saveData = function(){
     // Dispatch a success notification
     session()->flash('notification', 'Shiftruil verzoek verstuurd!');
 
-    return $this->redirectRoute('calendar', navigate: true);
+    return $this->redirectRoute('messages', navigate: true);
 
-};
-
-$resetList = function(){
-    $this->selectedWorkerId = '';
 };
 
 ?>
@@ -122,19 +127,6 @@ $resetList = function(){
 <div class="px-8 py-10 sm:px-0" x-data="{ showModal: false }" @close-modal.window="showModal = false">
 
     <section class="sm:w-[580px] md:w-[720px] mx-auto">
-
-        <!-- Breadcrumbs -->
-        <div class="flex items-center mb-8">
-            <a href="{{route('calendar')}}">Werkrooster</a>
-            <i class="bi bi-chevron-right text-xs mx-2 stroke-1"></i>
-            <a href="{{route('swap')}}">Shift ruilen</a>
-            <i class="bi bi-chevron-right text-xs mx-2 stroke-1"></i>
-            <span class="text-gray-400">Mijn shift</span>
-        </div>
-        <div class="text-gray-500 mb-4">
-            <div><i class="bi bi-building text-gray-400""></i> AH: 1645</div>
-            <div><i class="bi bi-check-circle text-gray-400"></i> Geregistreerd door: Jeroen Blankeveld</div>
-        </div>
 
         <h3 class="text-xl font-bold b-ah-border pb-1 mb-3">Mijn shift</h3>
 
@@ -199,22 +191,30 @@ $resetList = function(){
             </div>
         </h3>
         
-        <form wire:submit.prevent="choose" wire:key="sub-form">
+        <!-- Search form -->
+        <form wire:submit.prevent="searchWorkers" wire:key="sub-form" class="transition delay-150">
+
             <div class="flex gap-2 mb-3">
-                <div class="grow">
+                <div class="grow relative">
                     <label for=""></label>
-                    <input wire:model="keywords" class="py-2 px-4 bg-gray-100 w-full rounded-xl focus:outline focus:outline-blue-600" type="text" placeholder="Vind op naam">
+                    <input wire:model="keywords" class="py-2 px-4 bg-gray-100 w-full rounded-xl focus:outline focus:outline-blue-600" type="text" placeholder="Vind collega op naam">
+                    <div wire:click="resetList()" class="absolute right-3 top-[50%] translate-y-[-50%]">
+                        <i class="bi bi-x-circle-fill text-gray-300 hover:text-gray-500 cursor-pointer text-xl"></i>
+                    </div>
                 </div>
-                <div class="w-[80px]">
-                    <button type="submit" class="w-full bg-ah bg-ah-hover text-white py-2 rounded-full">
+                <div class="w-[100px]">
+                    <button type="submit" class="w-full bg-ah bg-ah-hover text-white py-2 btn">
                         Zoek
                     </button>
                 </div>
             </div>
+
+            @if($this->noResults) <div class="p-3 bg-gray-200 rounded-lg mt-2 mb-4">Geen resultaten gevonden.</div> @endif
             
-            <div class="border border-gray-300 rounded-xl overflow-hidden">
-                @if($this->collectionData)
-                    @foreach($this->collectionData as $person)
+            <!-- List of results / workers -->
+            <div class="border border-gray-300 rounded-xl overflow-hidden ">
+                @if($this->searchResults)
+                    @foreach($this->searchResults as $person)
                         <div wire:click="setWorkerId({{$person->id}})" class="w-full border-b last:border-b-0 border-gray-300 py-1 px-3 hover:bg-gray-100 cursor-pointer">
                             {{ $person->first_name }}
                             {{ $person->middle_part }} 
@@ -223,6 +223,7 @@ $resetList = function(){
                     @endforeach
                 @endif
             </div>
+            
         </form>
 
     </section>

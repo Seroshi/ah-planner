@@ -24,6 +24,10 @@
     }
 }
 
+[x-cloak] {
+    display: none !important;
+}
+
 a {
     cursor: pointer;
 }

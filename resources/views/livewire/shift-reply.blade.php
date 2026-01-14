@@ -13,6 +13,7 @@ state([
     'topic' => '',
     'remark' => '',
     'topicOptions' => Workday::getTopicOptions(),
+    'loading' => 'blabla...',
 ]);
 
 $workday = computed(function () {
@@ -39,10 +40,10 @@ on(['set-day-data' => function ($shiftID, $timeDiff, $breakTime) {
 
     //Values received from the 'calendar' volt component 
     $this->display = [
-        'date'      => $workday->date->format('l d M Y'),
+        'date'      => $workday->date->translatedFormat('l d M Y'),
         'type'      => $types[$workday->type] ?? 'unknown',
-        'startTime' => $workday->start_time?->format('H:i') ?? '',
-        'endTime'   => $workday->end_time?->format('H:i') ?? '',
+        'startTime' => $workday->start_time?->translatedFormat('H:i') ?? '',
+        'endTime'   => $workday->end_time?->translatedFormat('H:i') ?? '',
         'timeDiff'  => $timeDiff,
         'breakTime' => $breakTime,
         'swapAllowedInTime' => Workday::swapAllowedInTime($workday->date),
@@ -55,6 +56,7 @@ on(['set-day-data' => function ($shiftID, $timeDiff, $breakTime) {
     //Form fields from this component (found below)
     $this->topic = $workday->topic ?? '';
     $this->remark = $workday->remark ?? '';
+    $this->dispatch('set-day-data-finished');
 }]);
 
 $save = function () {
@@ -84,9 +86,16 @@ $save = function () {
 ?>
 
 <div class="flex justify-center items-center z-50" style="position:fixed; width:100vw; height:100vh; top:0; left:0; background:rgba(0,0,0,0.5);"
-    x-show="showModal" x-cloak
->
-    <div class="bg-white p-6 mr-3 rounded-md shadow-md w-[90%] max-w-lg relative" @click.away="showModal = false">
+    x-show="showModal" x-cloak>
+    
+    <div x-data="{ localLoading: false }" 
+            @set-day-data.window="localLoading = true"
+            @set-day-data-finished.window="localLoading = false"
+            class="bg-white p-6 mr-3 rounded-md shadow-md w-[90%] max-w-lg relative" @click.away="showModal = false">
+
+        <div x-show="localLoading" x-cloak class="absolute inset-0 flex items-center justify-center bg-white/50 z-10">
+            <div class="animate-spin rounded-full h-10 w-10 border-4 border-blue-500 border-t-blue-200"></div>
+        </div>
         
         <div class="absolute top-[-15px] right-[-15px] text-xs text-white w-8 h-8 bg-gray-600 hover:bg-gray-800 rounded-full flex justify-center items-center 
             cursor-pointer shadow-md duration-200"
@@ -94,7 +103,8 @@ $save = function () {
         >
             <i class="bi bi-x-lg"></i>
         </div>
-        <div class="space-y-4">
+
+        <div class="space-y-4" wire:loading.class="opacity-50 blur-[1px]">
     
             @if($this->workday)
             <div>
@@ -127,7 +137,7 @@ $save = function () {
                     <!-- Label -->
                     <div>
                         <i class="bi bi-tags text-blue-400 mr-1"></i>
-                        <span>Vullen</span>
+                        <span>vullen</span>
                     </div>
                 </div>
 
@@ -186,7 +196,7 @@ $save = function () {
                 </div>
 
                 @if(!$this->remark)
-                    <button type="submit" class="w-full text-white mt-2 py-2 rounded-xl bg-ah bg-ah-hover">
+                    <button type="submit" class="btn w-full text-white mt-2 py-2 bg-ah bg-ah-hover">
                         Stuur opmerking
                     </button>
                 @else

@@ -9,6 +9,7 @@ layout('components.layouts.master');
 title('Shift ruil');
 
 state([
+    'user_id' => 1,
     'swapAllowed' => false,
     'display' => [],
 ]);
@@ -22,8 +23,8 @@ $getDetails = computed(function(){
 
         return [
             'workId'    => $shift->id,
-            'workday'   => $shift->date->format('l d M Y'),
-            'worktime'  => $shift->start_time?->format('H:i') . ' - ' . $shift->end_time?->format('H:i'),
+            'workday'   => $shift->date->translatedFormat('l d M Y'),
+            'worktime'  => $shift->start_time?->translatedFormat('H:i') . ' - ' . $shift->end_time?->translatedFormat('H:i'),
             'hourDiff'  => $hourDiff,
             'breakTime' => $shift->getBreakTime($hourDiff),
         ];
@@ -31,7 +32,7 @@ $getDetails = computed(function(){
 });
 
 $getWorkdays = computed(function(){
-    return Workday::where('worker_id', 1)
+    return Workday::where('worker_id', $this->user_id)
         ->whereNotNull('start_time')
         ->whereDate('date', '>=', now()->addDays(2))
         ->orderBy('created_at', 'asc')
@@ -44,13 +45,6 @@ $getWorkdays = computed(function(){
 
     <!-- Week Information section-->
     <section class="sm:w-[580px] md:w-[720px] mx-auto">
-
-        <!-- Breadcrumbs -->
-        <div class="flex items-center mb-8">
-            <a href="{{route('calendar')}}">Werkrooster</a>
-            <i class="bi bi-chevron-right text-xs mx-2 stroke-1"></i>
-            <span class="text-gray-400">Shift ruilen</span>
-        </div>
 
         <!-- Top section -->
         <div class="text-left mb-4 w-[350px] mx-auto" id="test">
@@ -110,7 +104,7 @@ $getWorkdays = computed(function(){
                 </div>
 
                 <div>
-                    <a href="{{route('shift.swap', $shift['workId'])}}"
+                    <a href="{{route('shift.swap', $shift['workId'])}}" x-for="item in searchResults" :key="item.id"navigate: true
                         class="btn bg-ah bg-ah-hover text-white flex whitespace-nowrap py-2 px-4 group mt-4 mb-4 mr-3"
                         @click="showModal = true">
                         <span class="mr-1">Shift ruilen</span>

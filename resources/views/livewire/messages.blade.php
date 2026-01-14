@@ -1,11 +1,13 @@
 <?php
 
-use function Livewire\Volt\{state, mount, computed, on, uses, with};
+use function Livewire\Volt\{layout, title, state, mount, computed, on, uses, with};
 use Livewire\WithPagination;
 use App\Models\Workday;
 use App\Models\Message;
 use Carbon\Carbon;
 
+layout('components.layouts.master');
+title('Berichten');
 
 state([
 	'message' => fn() => Workday::value('worker_id'),
@@ -45,13 +47,6 @@ $totalCount = computed(function () {
 ">
 
 	<section wire:poll.8s>
-
-		<!-- Breadcrumbs -->
-		<div class="flex items-center mb-8">
-			<a href="{{route('calendar')}}">Werkrooster</a>
-			<i class="bi bi-chevron-right text-xs mx-2 stroke-1"></i>
-			<span class="text-gray-400">Berichten</span>
-		</div>
 
 		<h3 class="text-lg font-bold text-center mt-8 mb-2">Mijn berichten ({{ $this->totalCount }})</h3>
 
@@ -107,7 +102,7 @@ $totalCount = computed(function () {
 				<!-- Date display -->
 				<div class="w-[25%] p-4 text-sm">
 					<span class="p-1 rounded-full text-xs font-light">
-						{{$message->updated_at->format('d-M-Y, H:i')}}
+						{{$message->updated_at->translatedFormat('d-m-Y, H:i')}}
 					</span>
 				</div>
 
