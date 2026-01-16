@@ -36,8 +36,8 @@ class Message extends Model
     protected static function booted()
     {
         static::created(function ($message) {
-            // Delay the job by 2 minutes
-            \App\Jobs\ReplyToMessage::dispatch($message)->delay(now()->addSeconds(8));
+            // Delay the job by the time specified
+            \App\Jobs\ReplyToMessage::dispatch($message)->delay(now()->addSeconds(10));
         });
     }
 }

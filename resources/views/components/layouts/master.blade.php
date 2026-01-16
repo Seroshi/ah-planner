@@ -29,8 +29,8 @@
    </main>
 
    <section>
-        <livewire:notifications.success />
-    </section>
+      <livewire:notifications.success />
+   </section>
 
 </body>
 

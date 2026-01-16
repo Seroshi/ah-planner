@@ -17,21 +17,21 @@ class WorkdayFactory extends Factory
     public function definition(): array
     {
         // Define presets here so they are available to all attributes
-        $presets = [
+        $presets = collect([
             ['start' => '04:30', 'end' => '11:00', 'label' => 'Opening shift'],
             ['start' => '07:15', 'end' => '10:15', 'label' => 'Early shift'],
             ['start' => '11:00', 'end' => '15:30', 'label' => 'Afternoon shift'],
             ['start' => '16:00', 'end' => '21:00', 'label' => 'Late Shift'],
-        ];
+        ]);
 
-        $preset = $this->faker->randomElement($presets);
+        $preset = $presets->random();
 
         return [
-            'date' => $this->faker->date(),
+            'date' => fake()->date(),
             'type' => function (array $attributes) {
                 $isPast = \Carbon\Carbon::parse($attributes['date'])->isPast();
-                if ($this->faker->boolean(85)) return 'work'; //85% chance of work
-                return $isPast ? $this->faker->randomElement(['sick', 'holiday']) : 'holiday';
+                if (fake()->boolean(85)) return 'work'; //85% chance of work
+                return $isPast ? fake()->randomElement(['sick', 'holiday']) : 'holiday';
             },
             // If type is work or sick, use the preset. If not, null everything.
             'start_time' => function (array $attributes) use ($preset) {

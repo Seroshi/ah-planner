@@ -63,7 +63,8 @@ $getWorkdays = computed(function(){
         <!-- Content section (week overview) -->
         @foreach($this->getDetails as $shift)
         <div class="sm:text-[14px] my-[6px] border border-gray-300 rounded-xl">
-            <div class="flex justify-between items-center h-[65px] rounded-xl bg-white">
+            <a href="{{route('shift.swap', $shift['workId'])}}" navigate: true @click="showModal = true"
+                    class="flex justify-between items-center h-[65px] rounded-xl bg-white hover:bg-gray-100 transition delay-50 group cursor-pointer">
                 <div class="grow overflow-x-hidden px-3">
 
                     <!-- Shift day -->
@@ -104,15 +105,13 @@ $getWorkdays = computed(function(){
                 </div>
 
                 <div>
-                    <a href="{{route('shift.swap', $shift['workId'])}}" x-for="item in searchResults" :key="item.id"navigate: true
-                        class="btn bg-ah bg-ah-hover text-white flex whitespace-nowrap py-2 px-4 group mt-4 mb-4 mr-3"
-                        @click="showModal = true">
+                    <div class="btn bg-blue-400 group-hover:bg-blue-500 text-white flex whitespace-nowrap py-2 px-4 mt-4 mb-4 mr-3 transition delay-50">
                         <span class="mr-1">Shift ruilen</span>
                         <span><i class="bi bi-arrow-repeat inline-block transition-transform duration-500 group-hover:rotate-180"></i></span>
-                    </a>
+                    </div>
                 </div>
 
-            </div>
+            </a>
         </div>
         @endforeach
 

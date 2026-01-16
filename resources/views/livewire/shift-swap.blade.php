@@ -151,7 +151,7 @@ $saveData = function(){
             <!-- Label -->
             <div>
                 <i class="bi bi-tags text-blue-400 mr-1"></i>
-                <span>Vullen</span>
+                <span>vullen</span>
             </div>
         </div>
 

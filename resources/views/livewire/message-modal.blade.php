@@ -44,6 +44,9 @@ on(['set-modal-message-data' => function($messageId, $topic){
         'response' => $msg->response,
     ];
 
+    // For closing the loading spinner
+    $this->dispatch('set-modal-message-data-finished');
+
     //Refresh messages volt component 
     $this->dispatch('refresh-data'); 
 }]);
@@ -53,7 +56,11 @@ on(['set-modal-message-data' => function($messageId, $topic){
 <div class="flex justify-center items-center z-50 px-2" style="position:fixed; width:100vw; height:100vh; top:0; left:0; background:rgba(0,0,0,0.5);"
     x-show="showMessageModal" x-cloak
 >
-    <form wire:submit.prevent="save" class="bg-white p-6 mr-3 rounded-xl shadow-md w-[90%] max-w-lg relative" @click.away="showMessageModal = false">
+    <form wire:submit.prevent="save" class="bg-white p-6 mr-3 rounded-xl shadow-md w-[90%] max-w-2xl relative" 
+            @click.away="showMessageModal = false"
+            x-data="{ localLoading: false }" 
+            @set-modal-message-data.window="localLoading = true"
+            @set-modal-message-data-finished.window="localLoading = false">
         @php 
             $notHoliday = $this->message?->workday?->type != 'holiday';
         @endphp
@@ -63,7 +70,12 @@ on(['set-modal-message-data' => function($messageId, $topic){
         >
             <i class="bi bi-x-lg"></i>
         </div>
-        <div class="">
+        
+        <div x-show="localLoading" x-cloak class="absolute inset-0 flex items-center justify-center bg-white/50 z-10">
+            <div class="animate-spin rounded-full h-10 w-10 border-4 border-blue-500 border-t-blue-200"></div>
+        </div>
+
+        <div wire:loading.class="opacity-50 blur-[1px]">
 
             <!-- Top header -->
             <h3 class="text-xl font-medium pb-1 mb-2 b-ah-border">
@@ -90,7 +102,7 @@ on(['set-modal-message-data' => function($messageId, $topic){
             </div>
 
             <!-- Worker request -->
-            <div class="mt-4">{{ $this->display['workername'] }}:</div></div>
+            <div class="mt-4">{{ $this->display['workername'] }}:</div>
             <div class="bg-gray-100 rounded-md p-2 inline-block font-light">
                 {{ $this->display['remark'] }}
             </div>

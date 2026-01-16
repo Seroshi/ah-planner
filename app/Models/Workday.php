@@ -56,7 +56,7 @@ class Workday extends Model
     public static function swapAllowedInTime($date)
     {
         $diffDays = Carbon::now()->diffInDays($date);
-        return ($diffDays > 6) ? true : false;
+        return ($diffDays >= 2) ? true : false;
     }
 
     public function worker(): BelongsTo

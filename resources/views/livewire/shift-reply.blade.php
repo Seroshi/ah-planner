@@ -80,7 +80,7 @@ $save = function () {
     // Dispatch a success notification
     session()->flash('notification', 'Opmerking verstuurd!');
 
-    return $this->redirectRoute('home', navigate: true);
+    return $this->redirectRoute('messages', navigate: true);
 };
 
 ?>
@@ -123,6 +123,7 @@ $save = function () {
                 </div>
 
                 <div class="flex gap-x-1 flex-wrap ">
+
                     <!-- Shift time -->
                     <div class="w-[140px]">
                         @if($condition['isHoliday'])
@@ -130,7 +131,7 @@ $save = function () {
                             <span>Vrij</span>
                         @else
                             <i class="bi bi-clock text-blue-400 mr-1"></i>
-                            <span>{{ $display['startTime'] }}</span>
+                            <span>{{ $display['startTime'] }} - {{ $display['endTime'] }}</span>
                         @endif
                     </div>
 

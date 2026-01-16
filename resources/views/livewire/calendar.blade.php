@@ -104,7 +104,7 @@ $workdayRecords = computed(function (){
             'config' => $config,
             'date' => $record->date->toDateString(),
             'workday' => $record->date->translatedFormat('l d M Y'),
-            'worktime' => ($record->start_time) ? $record->start_time->translatedFormat('H:i') .' - '. $record->end_time->translatedFormat('H:i') : null,
+            'worktime' => ($record->start_time) ? $record->start_time->translatedFormat('H:i').' - '.$record->end_time->translatedFormat('H:i') : null,
             'hourDiff' => $hourDiff,
             'breakTime' => $record->getBreakTime($hourDiff),
         ]);
@@ -154,7 +154,7 @@ $selectedWeekDays = computed(function () {
 
 ?>
 
-<div class="calendar px-8 py-10 sm:px-0" x-data="{ showModal: false, localLoading: false }"
+<div class="calendar px-8 py-10 sm:px-0" x-data="{ showModal: false }"
         @open-modal.window="showModal = true" @close-modal.window="showModal = false">
     <div class="sm:w-[580px] md:w-[720px] mx-auto">
 
@@ -214,7 +214,7 @@ $selectedWeekDays = computed(function () {
             </div>
 
             <!-- Content of calendar (Days grid) -->
-            <div wire:loading.class="opacity-50 grayscale" wire:target="selectDate()" class="gray-light grid grid-cols-7 mb-8 border border-gray-300">
+            <div class="gray-light grid grid-cols-7 mb-8 border border-gray-300">
                 @foreach($this->calendarGrid as $day)
 
                 @php
