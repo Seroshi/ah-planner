@@ -6,24 +6,18 @@ state([
 	'open' => false,
 ]);
 
-//Fetch user ID
-$user = computed(function () {
-	$worker = \App\Models\Worker::first();
-	return ($worker ? $worker->full_name : '');
-});
-
 $messagesCount = computed(function() {
-	return \App\Models\Message::where('worker_id', 1)->get()->count();
+	return \App\Models\Message::where('worker_id', visitor()?->id )->get()->count();
 });
 
 ?>
-<nav x-data="{ open: @entangle('open') }"
+<nav x-data="{ open: false }"
 	class="w-full relative flex justify-between flex-wrap bg-[#00A2E5] py-2 px-3">
 
-	<div class="flex flex-col md:flex-row items-center gap-x-7">
+	<div class="flex flex-col md:flex-row gap-x-7">
 
 		<!-- Logo -->
-		<a href="{{ route('home') }}" navigate:true class="flex items-center text-white mr-2">
+		<a href="{{ route('home') }}" navigate:true class="flex items-center text-white">
 			
 			<div wire:persist="main-logo" class="w-[40px] h-[40px]">
 				<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
@@ -45,12 +39,12 @@ $messagesCount = computed(function() {
 					
 				</svg>
 			</div>
-			<span class="font-semibold text-[24px] md:text-xl ml-1 ">Planning</span>
+			<span class="font-semibold text-[24px] md:text-xl ml-1 ">Planner</span>
 		</a>
 
 		<!-- Main links -->
 		<div :class="open ? 'flex' : 'hidden'" 
-     		class="md:flex lg:flex-grow flex-wrap items-start md:items-center flex-col md:flex-row gap-x-6 gap-y-2">
+     		class="md:flex lg:flex-grow flex-wrap items-start md:items-center flex-col md:flex-row ml-2 gap-x-6 gap-y-2">
      
 			<a href="{{ route('calendar') }}" navigate: true  
 					class="flex items-center cursor-pointer pt-2 gap-1 md:gap-[2px] md:pt-0"
@@ -81,14 +75,16 @@ $messagesCount = computed(function() {
 	</div>
 				
 	<!-- Menu & User -->
-	<div class="pt-2 md:pt-0 flex gap-3">
+	<div class="flex gap-3">
 
-		<div class="block">
-			<a href="#"
-				class="text-sm px-4 py-2 leading-none border rounded text-white border-white hover:border-transparent hover:text-teal-500 hover:bg-white mt-[2px] lg:mt-0 hidden xs:block">
-				{{$this->user}}
-			</a>
-		</div>
+		@if( visitor() )
+			<div class="block">
+				<a href=""
+					class="text-sm px-4 py-2 leading-none border rounded text-white border-white hover:border-transparent hover:text-teal-500 hover:bg-white mt-[2px] lg:mt-0 hidden xs:block">
+					{{ visitor()->fullName }}
+				</a>
+			</div>
+		@endif
 
 		<div class="block md:hidden">
 			<button @click="open = !open"

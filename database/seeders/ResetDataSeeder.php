@@ -2,20 +2,18 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
-class DatabaseSeeder extends Seeder
+class ResetDataSeeder extends Seeder
 {
     /**
-     * Seed the application's database.
+     * Run the database seeds.
      */
     public function run(): void
     {
-
         $tables = ['workers', 'workdays', 'messages', 'shift_swaps'];
 
         // Remove the following tables data
@@ -29,6 +27,5 @@ class DatabaseSeeder extends Seeder
         $this->call([
             WorkerSeeder::class,
         ]);
-
     }
 }

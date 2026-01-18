@@ -87,7 +87,7 @@ $calendarGrid = computed(function () {
 // Runs once in the mount and have the work data organized
 $workdayRecords = computed(function (){
 
-    $data = Workday::where('worker_id', 1)
+    $data = Workday::where('worker_id', visitor()?->id)
         ->get()
         ->keyBy(fn($item) => $item->date->toDateString());
 
@@ -122,7 +122,7 @@ $selectedWeekDays = computed(function () {
         $endOfWeek = $selectedDate->copy()->endOfWeek(Carbon::SUNDAY);
 
         // 2. Fetch only the records for this specific week from DB
-        $getWorker = \App\Models\Worker::first();
+        $getWorker = \App\Models\Worker::find(visitor()?->id);
 
         $weekdayRecords = $this->workdayRecords
             ->whereBetween('date', [$startOfWeek->toDateString(), $endOfWeek->toDateString()])
@@ -229,7 +229,7 @@ $selectedWeekDays = computed(function () {
                     <div class="sm:text-[13px] font-bold flex sm:justify-between items-center items-start">
                     @if($day['isToday'])
                         <!-- Today highlighter  -->
-                        <p class="font-bold today flex justify-center items-center mt-[-2px] ml-[-4px] sm:ml-[-6px] sm:mt-[-4px]">{{ $day['date']->day }}</p>
+                        <p class="font-bold today aspect-square flex justify-center items-center mt-[-2px] ml-[-4px] sm:ml-[-6px] sm:mt-[-4px]">{{ $day['date']->day }}</p>
                     @else
                         <!-- Daynumber of the month -->
                         <p class="font-bold ">{{ $day['date']->day }}</p>

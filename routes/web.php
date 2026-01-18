@@ -4,20 +4,22 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 
-Volt::route('/', 'calendar')
+Volt::route('/', 'visitor')
     ->name('home');
 
-Volt::route('/calendar', 'calendar')
+Route::middleware(['demo.setup'])->group(function () {
+    Volt::route('/werkrooster', 'calendar')
     ->name('calendar');
 
-Volt::route('/berichten', 'messages')
-    ->name('messages');
+    Volt::route('/berichten', 'messages')
+        ->name('messages');
 
-Volt::route('/shift-ruil', 'swap')
-    ->name('swap');
+    Volt::route('/shift-ruil', 'swap')
+        ->name('swap');
 
-Volt::route('/shift-ruil/{workday}', 'shift-swap')
-    ->name('shift.swap');
+    Volt::route('/shift-ruil/{workday}', 'shift-swap')
+        ->name('shift.swap');
+});
 
 Route::get('/webhooks/scheduler/{token}', function ($token) {
     if ($token !== config('app.webhook_token')) {

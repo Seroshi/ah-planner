@@ -6,6 +6,7 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\Worker;
 use App\Models\Workday;
+use App\Models\Visitor;
 
 class WorkerSeeder extends Seeder
 {
@@ -15,9 +16,12 @@ class WorkerSeeder extends Seeder
     public function run(): void
     {
         $today = now(); 
+        $visitor = Visitor::where('first_name', '!=', '')
+                    ->where('last_name', '!=', '')
+                    ->get();
         
         //Fake people used for this demo
-        $names = ['Rudolf Render', 'Laura van Dijk', 'David van den Brug', 'Pieter Boom', 
+        $names = [$visitor?->first()?->full_name ?? 'Eric Langemouw', 'Rudolf Render', 'Laura van Dijk', 'David van den Brug', 'Pieter Boom', 
             'Hendrik van Oogen', 'Tessa Boogschutter'];
     
         foreach($names as $name)

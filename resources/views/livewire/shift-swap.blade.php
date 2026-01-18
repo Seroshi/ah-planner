@@ -12,7 +12,7 @@ layout('components.layouts.master');
 title('Shift ruil');
 
 state([
-    'user_id' => 1,
+    'user_id' => visitor()?->id,
     'workday' => '',
     'display' => [],
     'condition' => [],
@@ -173,7 +173,7 @@ $saveData = function(){
             <div class="flex flex-wrap gap-2 items-center">
                 <span>Ruilen met</span>
                 @if($this->selectedWorkerId > 0)
-                    <span class="color-ah">{{ $this->getWorker?->first_name }}?</span>
+                    <span class="color-ah mr-2">{{ $this->getWorker?->full_name }}?</span>
                     <button wire:click="saveData()" @click="showModal = true" class="btn bg-ah bg-ah-hover text-white py-1 px-5">
                         Ja <i class="bi bi-chevron-right ml-1 inline-block animate-bounce-x"></i>
                     </button>

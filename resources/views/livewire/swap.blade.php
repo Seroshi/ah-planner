@@ -11,7 +11,6 @@ title('Shift ruil');
 state([
     'user_id' => 1,
     'swapAllowed' => false,
-    'display' => [],
 ]);
 
 $getDetails = computed(function(){

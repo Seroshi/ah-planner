@@ -25,6 +25,11 @@
    <livewire:navigation />
 
    <main class="w-full">
+
+      <section>
+         <livewire:notifications.error />
+      </section>
+
       {{ $slot }} 
    </main>
 

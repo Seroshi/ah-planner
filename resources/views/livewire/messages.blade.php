@@ -22,7 +22,7 @@ $refreshMessages = function ($currentPage = null) {
 
 // Grab all corresponding messages
 $messages = computed(function () {
-    $getWorker = \App\Models\Worker::first();
+    $getWorker = visitor();
     if($getWorker){
         return Message::query()
             ->where('worker_id', $getWorker->id)

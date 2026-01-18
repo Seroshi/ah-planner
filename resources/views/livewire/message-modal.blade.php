@@ -12,6 +12,8 @@ state([
         'topic' => '',
         'remark' => '',
         'response' => '',
+        'created_at' => '',
+        'updated_at' => '',
     ],
 ]);
 
@@ -42,6 +44,8 @@ on(['set-modal-message-data' => function($messageId, $topic){
         'remark' => $msg->remark,
         'replier' => $msg->replier,
         'response' => $msg->response,
+        'created_at' => $msg->created_at->translatedFormat('d-m-Y H:i'),
+        'updated_at' => $msg->updated_at->translatedFormat('d-m-Y H:i'),
     ];
 
     // For closing the loading spinner
@@ -106,6 +110,7 @@ on(['set-modal-message-data' => function($messageId, $topic){
             <div class="bg-gray-100 rounded-md p-2 inline-block font-light">
                 {{ $this->display['remark'] }}
             </div>
+            <div class="text-xs text-gray-400 font-light pl-2 mt-1">{{ $this->display['created_at'] }}</div>
 
             <!-- Leader response -->
             @if($this->message?->response)
@@ -114,6 +119,7 @@ on(['set-modal-message-data' => function($messageId, $topic){
                     <div class="bg-gray-100 rounded-md p-2 inline-block font-light">
                         {{ $this->display['response'] }}
                     </div>
+                    <div class="text-xs text-gray-400 font-light pl-2 mt-1">{{ $this->display['updated_at'] }}</div>
                 </div>
             @endif
 
