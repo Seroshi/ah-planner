@@ -1,5 +1,6 @@
 <?php
 
+use Livewire\Livewire;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
@@ -66,6 +67,10 @@ Route::get('/art/debug-clear', function() {
     return "Everything is cleared! Refresh the page now.";
 });
 
+Route::get('/dump-autoload', function () {
+    shell_exec('composer dump-autoload -o');
+    return "Autoload dumped successfully!";
+});
 
 Route::get('/deploy-database', function () {
     // 1. Run Migrations (creates tables)
@@ -75,4 +80,17 @@ Route::get('/deploy-database', function () {
     Artisan::call('db:seed', ['--force' => true]);
 
     return "Database tables created and seeded successfully!";
+});
+
+Route::get('/art/path-test', function() {
+    return [
+        'public_path' => public_path(),
+        'base_path' => base_path(),
+        'manifest_exists' => file_exists(public_path('build/manifest.json')),
+    ];
+});
+
+// If the first one fails, this one catches it
+Livewire::setUpdateRoute(function ($handle) {
+    return Route::post('/livewire/update', $handle)->middleware('web');
 });

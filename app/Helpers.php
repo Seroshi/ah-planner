@@ -16,8 +16,15 @@ if (! function_exists('visitor')) {
    
       static $cachedVisitor;
 
-      // If not empty, find Id in the database
-      return $cachedVisitor ??= Visitor::find($visitorId);
+      static $alreadyLooked = false;
+
+      // Making sure session is only active if DB record exist
+      if (!$alreadyLooked) {
+         $cachedVisitor = Visitor::find($visitorId);
+         $alreadyLooked = true;
+      }
+
+      return $cachedVisitor;
 
     }
 }

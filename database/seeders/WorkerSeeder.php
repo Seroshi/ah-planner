@@ -16,12 +16,11 @@ class WorkerSeeder extends Seeder
     public function run(): void
     {
         $today = now(); 
-        $visitor = Visitor::where('first_name', '!=', '')
-                    ->where('last_name', '!=', '')
-                    ->get();
+
+        if(!visitor()) throw new \Exception("Seeding failed, visitor not found in session.");
         
         //Fake people used for this demo
-        $names = [$visitor?->first()?->full_name ?? 'Eric Langemouw', 'Rudolf Render', 'Laura van Dijk', 'David van den Brug', 'Pieter Boom', 
+        $names = [visitor()->fullName ?? 'Eric Langemouw', 'Rudolf Render', 'Laura van Dijk', 'David van den Brug', 'Pieter Boom', 
             'Hendrik van Oogen', 'Tessa Boogschutter'];
     
         foreach($names as $name)

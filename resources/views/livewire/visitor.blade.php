@@ -1,9 +1,11 @@
 <?php
 
-use function Livewire\Volt\{state, mount, rules, computed};
+use function Livewire\Volt\{layout, title, state, mount, rules, computed};
 use Illuminate\Support\Facades\Cache;
 use App\Models\Visitor;
 
+layout('components.layouts.master');
+title('Welcome');
 
 state([
     'formFields' => [],
@@ -54,13 +56,14 @@ $save = function(){
 
     }
 
-    // Start the loading spinner 
-    $this->processing = true;
-
     // Try to get a lock for 30 seconds
     $lock = Cache::lock('db_reset', 30);
 
     if ($lock->get()) {
+
+        // Start the loading spinner 
+        $this->processing = true;
+
         try {
 
             // Clear specific tables and run the worker seeder
@@ -71,6 +74,7 @@ $save = function(){
 
             // Ensure the visitor has already initialized the project in this session
             session(['demo_initialized' => true]);
+            $this->dispatch('setup-done');
 
             return $this->redirectRoute('calendar', navigate: true);
 
@@ -93,12 +97,14 @@ $save = function(){
 
 <div class="flex justify-center items-center z-50 fixed top-0 left-0 w-screen h-screen" style="background:rgba(0,0,0,0.5);">
 
-    <section x-data="{processing: @entangle('processing') }" class="bg-white p-6 mr-3 rounded-xl shadow-md max-w-xl overflow-hidden relative">
+    <section x-data="{ show:true }" x-show="show" @setup-done.window="show=false" class="bg-white p-6 mr-3 rounded-xl shadow-md max-w-xl overflow-hidden relative">
 
-        <div x-show="processing" style="display: none;" class="absolute inset-0 flex flex-col gap-3 text-center items-center justify-center bg-gray-100 z-10">
-            <img src="{{ asset('images/favicon.svg') }}" alt="logo" class="w-[80px] h-auto animate-pulse">
-            <div class="animate-spin rounded-full h-10 w-10 border-4 border-blue-500 border-t-blue-200"></div>
-            <div class="text-blue-400 font-bold">Een moment geduld a.u.b.</br> De data wordt voor je klaargezet.</div>
+        <div wire:loading.delay.longer wire:target="save" class="absolute inset-0 bg-gray-100 z-10">
+            <div class="flex flex-col gap-3 text-center items-center justify-center h-full">
+                <img src="{{ asset('images/favicon.svg') }}" alt="logo" class="w-[80px] h-auto animate-pulse">
+                <div class="animate-spin rounded-full h-10 w-10 border-4 border-blue-500 border-t-blue-200"></div>
+                <div class="text-blue-400 font-bold">Een moment geduld a.u.b.</br> De data wordt voor je klaargezet.</div>
+            </div>
         </div>
 
         @session('error')  
@@ -116,9 +122,9 @@ $save = function(){
             </div>
         </div>
 
-        <p class="mb-6">Om je goed van dienst te zijn, hebben we de volgende gegevens van je nodig:</p>
+        <p class="mb-6">Om je goed van dienst te zijn (voor deze demo), hebben we de volgende gegevens van je nodig:</p>
 
-        <form wire:submit.prevent="save" x-on:submit="processing = true">
+        <form wire:submit="save">
 
             <div class="flex gap-x-3 flex-col xs:flex-row">
                 <div class="mb-4">
@@ -141,7 +147,7 @@ $save = function(){
                 <input wire:model="formFields.lastName" type="text" class="w-full bg-gray-100 rounded-md focus:outline focus:outline-blue-600 mt-2 p-2">
             </div>
 
-            <button type="submit" class="btn bg-ah bg-ah-hover py-2 w-full text-white text-center">
+            <button wire:loading.remove wire:target="save" type="submit" class="btn bg-ah bg-ah-hover py-2 w-full text-white text-center">
                 <span>Bevestig </span>
                 <i class="bi bi-check2-circle"></i>
             </button>

@@ -38,7 +38,7 @@ return [
     |
     */
 
-    'layout' => 'components.layouts.app',
+    'layout' => 'components.layouts.master',
 
     /*
     |---------------------------------------------------------------------------
@@ -192,5 +192,5 @@ return [
     | This is the URI path that Livewire will use for its update endpoint.
     |
     */
-    'update_route_path' => 'portfolio/ah-planner/livewire/update',
+    'update_path' => 'portfolio/ah-planner/livewire/update',
 ];

@@ -22,10 +22,10 @@ $refreshMessages = function ($currentPage = null) {
 
 // Grab all corresponding messages
 $messages = computed(function () {
-    $getWorker = visitor();
+    $getWorker = 1;
     if($getWorker){
         return Message::query()
-            ->where('worker_id', $getWorker->id)
+            ->where('worker_id', $getWorker)
             ->orderBy('created_at', 'desc') // Shortcut for orderBy('updated_at', 'desc')
             ->paginate(8, ['*'], 'page', $this->page) // Force the page to stick to the pagenumber
 				->withPath('/'); // Prevents the URL from being confused
@@ -39,14 +39,14 @@ $totalCount = computed(function () {
 
 ?>
 
-<div class="mb-2 sm:max-w-[650px] py-10 mx-auto" x-data="{ showMessageModal: false }"
+<div class="px-8 py-10 sm:px-0" x-data="{ showMessageModal: false }"
 		x-on:refresh-data.window="
 		const urlParams = new URLSearchParams(window.location.search);
 		const currentPage = urlParams.get('page') || 1;
 		$wire.refreshMessages(currentPage);
 ">
 
-	<section wire:poll.8s>
+	<section wire:poll.8s class="sm:w-[580px] md:w-[720px] mx-auto">
 
 		<h3 class="text-lg font-bold text-center mt-8 mb-2">Mijn berichten ({{ $this->totalCount }})</h3>
 

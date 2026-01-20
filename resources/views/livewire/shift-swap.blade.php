@@ -12,7 +12,7 @@ layout('components.layouts.master');
 title('Shift ruil');
 
 state([
-    'user_id' => visitor()?->id,
+    'user_id' => 1,
     'workday' => '',
     'display' => [],
     'condition' => [],

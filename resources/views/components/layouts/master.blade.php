@@ -36,7 +36,7 @@
    <section>
       <livewire:notifications.success />
    </section>
-
+   
 </body>
 
 </html>

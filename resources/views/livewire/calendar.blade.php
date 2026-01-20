@@ -14,10 +14,11 @@ state([
     'startsAt' => Carbon::now(),
     'selectedDate' => fn() => now()->toDateString(), // Track selection by YYYY-MM-DD
     'selectedId' => 1,
+    'visitorId' => 1,
 ]);
 
 mount(function () {
-
+    
 });
 
 $dbConnection = computed(function () {
@@ -87,9 +88,14 @@ $calendarGrid = computed(function () {
 // Runs once in the mount and have the work data organized
 $workdayRecords = computed(function (){
 
-    $data = Workday::where('worker_id', visitor()?->id)
+    // return dd( $this->visitorId );
+    
+
+    $data = Workday::where('worker_id', $this->visitorId)
         ->get()
         ->keyBy(fn($item) => $item->date->toDateString());
+
+        // return dd( $data );
 
     return $data->map(function ($record){
         $hourDiff = $record->start_time?->diffInHours($record->end_time);
@@ -122,7 +128,7 @@ $selectedWeekDays = computed(function () {
         $endOfWeek = $selectedDate->copy()->endOfWeek(Carbon::SUNDAY);
 
         // 2. Fetch only the records for this specific week from DB
-        $getWorker = \App\Models\Worker::find(visitor()?->id);
+        $getWorker = \App\Models\Worker::find($this->visitorId);
 
         $weekdayRecords = $this->workdayRecords
             ->whereBetween('date', [$startOfWeek->toDateString(), $endOfWeek->toDateString()])
