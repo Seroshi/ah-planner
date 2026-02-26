@@ -20,13 +20,13 @@ See a mistake or question regarding your shift? Send a quick request with a shor
 
 ![Feat2](https://github.com/user-attachments/assets/707b883d-bd8d-4600-a869-37ac21326cb0)
 
-
 ## Feature 3: Shift swap
-Inconvenient work day? Try your luck to swap it with a colleague. They will respond fast (10 sec), don't worry.
+Inconvenient work day? Try your luck to swap it with a colleague. They will respond within a minute or so, don't worry.
 
 ![Feat3](https://github.com/user-attachments/assets/30f63ba2-ae8e-4a77-8db7-8ac6fbfe1cc5)
 
 ## Feature 4: Messages
 All your requests are visible in a clear overview list. See unread messages and the replies of both your colleagues or the manager.   
+
 ![Feat4](https://github.com/user-attachments/assets/78ef2fd5-bc39-4557-90e8-77270beb33f5)
 
